@@ -211,6 +211,14 @@ Vous devriez voir que ces noms de domaine résolvent à l'adresse IP de `server2
 - **Clarté** : Il est clair que `site1`, `site2`, `site3` et `glpi` sont tous hébergés sur `server2`.
 - **Éviter la redondance** : Pas besoin de répéter la même adresse IP pour plusieurs enregistrements A.
 
+## **Configurer le client DHCP pour utiliser le serveur DNS local**
+
+La première carte réseau de server1 est configurée en DHCP et obtient sa configuration à partir du client DHCP. Le client DHCP va donc créer le fichier `/etc/resolv.conf` (permet la configuration du client DNS) à chaque redémarrage du service réseau. Il faut éditer le fichier de configuration du client dhcp `/etc/dhcp/dhclient.conf` et décommenter la ligne suivante :
+
+```ini
+prepend domain-name-servers 127.0.0.1;
+```
+
 ## **Conclusion**
 
 En utilisant des enregistrements **CNAME** pour `site1`, `site2`, `site3` et `glpi`, nous avons simplifié la gestion de notre zone DNS. Cette approche offre une plus grande flexibilité et facilite la maintenance future, surtout si l'adresse IP du serveur hébergeant les sites web change.
