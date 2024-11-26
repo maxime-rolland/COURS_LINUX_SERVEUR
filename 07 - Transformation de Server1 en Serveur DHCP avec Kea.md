@@ -25,7 +25,7 @@ Le processus DHCP suit une séquence d'échanges entre le client et le serveur, 
 
 **Schéma du processus DORA :**
 
-```
+```ini
 Client                              Serveur DHCP
    |                                      |
    | -- DHCPDISCOVER (broadcast) -->      |
