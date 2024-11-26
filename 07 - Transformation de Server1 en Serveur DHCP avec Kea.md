@@ -1,12 +1,12 @@
-## **Étape 7 : Transformation de Server1 en Serveur DHCP avec Kea**
+# **Étape 7 : Transformation de server1 en serveur DHCP avec Kea**
 
-### **Installer Kea DHCP**
+## **Installer Kea DHCP**
 
 ```bash
 sudo apt install kea-dhcp4-server
 ```
 
-### **Configurer Kea pour Votre Réseau**
+## **Configurer Kea pour votre réseau**
 
 1. **Éditer le fichier de configuration** :
 
@@ -52,15 +52,15 @@ sudo apt install kea-dhcp4-server
    sudo systemctl start kea-dhcp4-server
    ```
 
-### **Vérifier le Fonctionnement du DHCP**
+## **Vérifier le fonctionnement du DHCP**
 
-1. **Configurer le Client Windows pour Obtenir une IP Automatiquement**
+1. **Configurer le client Windows pour obtenir une IP automatiquement**
 
-2. **Vérifier qu'il Obtient une Adresse dans la Plage `192.168.200.100 - 192.168.200.110`**
+2. **Vérifier qu'il obtient une adresse dans la Plage `192.168.200.100 - 192.168.200.110`**
 
-3. **Tester la Connectivité et la Résolution DNS**
+3. **Tester la connectivité et la résolution DNS**
 
-### **Comprendre l'Utilisation des Logs avec `journalctl`**
+## **Comprendre l'utilisation des Logs avec `journalctl`**
 
 - **Consulter les logs de Kea DHCP** :
 
