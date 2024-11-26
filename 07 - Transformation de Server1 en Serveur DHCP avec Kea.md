@@ -171,7 +171,7 @@ Voici le contenu du fichier de configuration du service DHCP-DDNS :
 {
   "DhcpDdns": {
     // Définition de la clé TSIG partagée avec le serveur DNS
-    // TODO : à include depuis un fichier externe
+    
     "tsig-keys": [
       {
         "name": "rndc-key",
