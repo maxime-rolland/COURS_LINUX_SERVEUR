@@ -262,18 +262,14 @@ zone "learn-it.local" IN {
     type master;
     file "/var/lib/bind/zones/db.learn-it.local";
     // Autoriser les mises à jour dynamiques sécurisées
-    update-policy {
-        grant rndc-key zonesub ANY;
-    };
+    allow-update { key rndc-key; };
 };
 
 zone "200.168.192.in-addr.arpa" IN {
     type master;
     file "/var/lib/bind/zones/db.192.168.200";
     // Autoriser les mises à jour dynamiques sécurisées
-    update-policy {
-        grant rndc-key zonesub ANY;
-    };
+    allow-update { key rndc-key; };
 };
 ```
 
