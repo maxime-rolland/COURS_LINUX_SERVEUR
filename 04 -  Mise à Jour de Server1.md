@@ -1,6 +1,6 @@
-## **Étape 4 : Mise à Jour de Server1**
+# **Étape 4 : Mise à jour de server1**
 
-### **Vérifier et Configurer le Fichier `sources.list`**
+## **Vérifier et configurer le fichier `sources.list`**
 
 1. **Comprendre l'importance du fichier `sources.list`** :
 
@@ -16,7 +16,7 @@
 
    Le contenu devrait ressembler à ceci :
 
-   ```
+   ```ini
    deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware
    deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware
 
@@ -37,7 +37,7 @@
 
    - Assurez-vous que les dépôts pointent vers `bookworm` (Debian 12) et incluent les sections `main`, `contrib`, `non-free`, et `non-free-firmware` si nécessaire.
 
-### **Mettre à Jour le Système**
+## **Mettre à Jour le système**
 
 1. **Mettre à jour la liste des paquets** :
 

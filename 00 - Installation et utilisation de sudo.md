@@ -39,7 +39,7 @@ Par défaut, Debian 12 n'installe pas le paquet `sudo` lors de l'installation mi
      apt install sudo
      ```
 
-## **Ajouter un Utilisateur au Groupe `sudo`**
+## **Ajouter un utilisateur au groupe `sudo`**
 
 Pour permettre à un utilisateur d'exécuter des commandes avec `sudo`, vous devez l'ajouter au groupe `sudo`.
 
@@ -104,7 +104,7 @@ Les changements de groupes ne prennent effet qu'après une nouvelle connexion. V
 
    - Si la commande s'exécute sans erreur, `sudo` est correctement configuré.
 
-## **Conseils de Sécurité pour l'Utilisation de `sudo`**
+## **Conseils de sécurité pour l'utilisation de `sudo`**
 
 - **Utiliser `sudo` avec Précaution**
 
@@ -144,17 +144,17 @@ Maintenant que `sudo` est installé et configuré, vous pouvez l'utiliser pour t
     sudo systemctl restart nom_du_service
     ```
 
-## **Notes Importantes**
+## **Notes importantes**
 
-- **Ne Partagez Pas Votre Mot de Passe**
+- **Ne partagez pas votre mot de passe**
 
   - Votre mot de passe utilisateur vous permet d'exécuter des commandes avec `sudo`. Ne le partagez pas avec d'autres utilisateurs.
 
-- **Garder le Système à Jour**
+- **Garder le système à jour**
 
   - Utilisez régulièrement `sudo apt update` et `sudo apt upgrade` pour maintenir votre système sécurisé.
 
-- **Configurer `sudoers` si Nécessaire**
+- **Configurer `sudoers` si nécessaire**
 
   - Le fichier `/etc/sudoers` détermine les permissions accordées aux utilisateurs et aux groupes.
   - Pour des configurations avancées, utilisez la commande `visudo` pour éditer ce fichier en toute sécurité :
