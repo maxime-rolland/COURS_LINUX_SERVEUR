@@ -129,7 +129,7 @@
 - **Sur Server2** :
 
   ```bash
-  ping -c 4 google.com
+  ping -c 4 8.8.8.8
   ```
 
 - **Sur le Client Windows** :
