@@ -78,19 +78,18 @@ Voici le contenu du fichier de configuration, avec des commentaires expliquant c
         "interfaces-config": {
             // On configure ici notre interface d'écoute sur la couche 2
             "interfaces": [
-                "enp0s8" // Remplacez "enp0s8" par le nom de votre interface interne
+                "eth1"
             ]
         },
-        // On indique que l'on souhaite stocker la base de données des baux en fichier
+        // On indique que l'on souhaite stocker la bdd des baux en fichier
         "lease-database": {
             "type": "memfile",
             "lfc-interval": 3600
         },
-        // Temporisateurs pour le renouvellement des baux
         "renew-timer": 900,
         "rebind-timer": 1800,
         "valid-lifetime": 3600,
-        // Important : permet d'indiquer qu'il faut communiquer avec le service kea-dhcp-ddns-server 
+        // Important, permet d'indiquer qu'il faut communiquer avec le service  kea-dhcp-ddns-server
         "dhcp-ddns": {
             "enable-updates": true
         },
@@ -110,16 +109,16 @@ Voici le contenu du fichier de configuration, avec des commentaires expliquant c
                 "data": "learn-it.local"
             },
             {
-                // On indique le domaine de recherche DNS
+                // On indique le suffixe DNS à utiliser
                 "name": "domain-search",
-                "data": "learn-it.local"
+                "data": "cesi.local"
             }
         ],
-        // On définit ici nos sous-réseaux, nous n'en avons qu'un seul dans le cadre du TP
+        // On définit ici nos sous réseaux, nous n'en avons qu'un seul dans le cadre du TP
         "subnet4": [
             {
                 "subnet": "192.168.200.0/24",
-                // Dans ce réseau, nous définissons nos plages d'IP à allouer aux clients
+                // Dans ce réseau, nous définissons nos plages d'IP a allouer aux clients
                 "pools": [
                     {
                         // Nous n'en avons qu'une seule dans le cadre du TP
@@ -172,11 +171,12 @@ Voici le contenu du fichier de configuration du service DHCP-DDNS :
 {
   "DhcpDdns": {
     // Définition de la clé TSIG partagée avec le serveur DNS
+    // TODO : à include depuis un fichier externe
     "tsig-keys": [
       {
         "name": "rndc-key",
         "algorithm": "HMAC-SHA256",
-        "secret": "VOTRE_CLÉ_SECRÈTE_IÇI" // Nous utiliserons la clé de /etc/bind/rndc.key
+        "secret": "VOTRE_CLE_RNDC_ICI"
       }
     ],
     // Définition des zones DNS à mettre à jour
