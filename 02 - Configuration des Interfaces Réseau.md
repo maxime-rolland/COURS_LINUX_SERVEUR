@@ -1,8 +1,8 @@
-## **Étape 2 : Configuration des Interfaces Réseau**
+## **Étape 2 : Configuration des Interfaces Réseaux**
 
 ### **Configuration Réseau de Server1**
 
-1. **Lister les interfaces réseau disponibles** :
+1. **Lister les interfaces réseaux disponibles** :
 
    ```bash
    ip addr show
@@ -59,7 +59,7 @@
 
 ### **Configuration Réseau de Server2**
 
-1. **Lister les interfaces réseau disponibles** :
+1. **Lister les interfaces réseaux disponibles** :
 
    ```bash
    ip addr show
