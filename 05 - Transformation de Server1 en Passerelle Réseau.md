@@ -134,7 +134,8 @@
 
 - **Sur le Client Windows** :
 
-  - Ouvrez un navigateur web et accédez à `http://www.google.com`.
-  - Si l'accès fonctionne, la passerelle est correctement configurée.
+   ```powershell
+   ping 8.8.8.8
+   ``` 
 
 ---
