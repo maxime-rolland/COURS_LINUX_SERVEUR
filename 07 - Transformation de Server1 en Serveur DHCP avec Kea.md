@@ -111,7 +111,7 @@ Voici le contenu du fichier de configuration, avec des commentaires expliquant c
             {
                 // On indique le suffixe DNS à utiliser
                 "name": "domain-search",
-                "data": "cesi.local"
+                "data": "learn-it.local"
             }
         ],
         // On définit ici nos sous réseaux, nous n'en avons qu'un seul dans le cadre du TP
@@ -276,15 +276,14 @@ zone "200.168.192.in-addr.arpa" IN {
 **Explications :**
 
 - **`include "/etc/bind/rndc.key";`** : Inclut le fichier contenant la clé TSIG.
-- **`update-policy`** : Autorise les mises à jour dynamiques pour les zones spécifiées, en utilisant la clé `rndc-key`.
+- **`allow-update`** : Autorise les mises à jour dynamiques pour les zones spécifiées, en utilisant la clé `rndc-key`.
 
 #### **Vérifier les Permissions**
 
 Assurez-vous que l'utilisateur `bind` a les permissions nécessaires sur les fichiers de zone pour permettre les mises à jour dynamiques :
 
 ```bash
-sudo chown bind:bind /var/lib/bind/zones/db.learn-it.local
-sudo chown bind:bind /var/lib/bind/zones/db.192.168.200
+sudo chown -R bind:bind /var/lib/bind
 ```
 
 #### **Redémarrer Bind9**
