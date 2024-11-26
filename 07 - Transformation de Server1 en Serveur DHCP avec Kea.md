@@ -1,8 +1,8 @@
-# **Étape 7 : Transformation de server1 en serveur DHCP avec Kea**
+# **Étape 7 : Transformation de server1 en serveur DHCP avec Kea et Mise en Place du DDNS**
 
-Dans cette étape, nous allons transformer **server1** en serveur DHCP en utilisant **Kea**, et mettre en place les mises à jour DNS dynamiques (DDNS) afin que les baux DHCP soient automatiquement enregistrés dans notre serveur DNS. Avant de procéder à la configuration, il est essentiel de comprendre le fonctionnement du protocole DHCP.
+Dans cette étape, nous allons transformer **server1** en serveur DHCP en utilisant **Kea**, et mettre en place les mises à jour DNS dynamiques (DDNS) afin que les baux DHCP soient automatiquement enregistrés dans notre serveur DNS. Nous utiliserons les fichiers de configuration fournis, et la clé TSIG générée lors de l'installation de **Bind9** (située dans `/etc/bind/rndc.key`).
 
-## **Comprendre le fonctionnement du protocole DHCP**
+## **Comprendre le Fonctionnement du Protocole DHCP**
 
 ### **Qu'est-ce que le DHCP ?**
 
@@ -14,16 +14,13 @@ Le **DHCP** (Dynamic Host Configuration Protocol) est un protocole réseau qui p
 - **Serveurs DNS**
 - **Autres options spécifiques**
 
-### **Fonctionnement du DHCP : Interactions client/serveur**
+### **Fonctionnement du DHCP : Interaction Client/Serveur**
 
 Le processus DHCP suit une séquence d'échanges entre le client et le serveur, souvent décrite par l'acronyme **DORA** :
 
-1. **Discovery (Découverte)** : Le client envoie un message **DHCPDISCOVER** en diffusion (broadcast) pour localiser les serveurs DHCP disponibles sur le réseau.
-
+1. **Discovery (Découverte)** : Le client envoie un message **DHCPDISCOVER** en broadcast pour localiser les serveurs DHCP disponibles sur le réseau.
 2. **Offer (Offre)** : Les serveurs DHCP répondent avec un message **DHCPOFFER**, proposant une configuration IP au client.
-
 3. **Request (Demande)** : Le client choisit une offre et envoie un message **DHCPREQUEST** pour demander la configuration proposée.
-
 4. **Acknowledgment (Accusé de réception)** : Le serveur confirme la configuration avec un message **DHCPACK**, finalisant le processus.
 
 **Schéma du processus DORA :**
@@ -41,14 +38,7 @@ Client                              Serveur DHCP
    |                                      |
 ```
 
-**Détails des messages :**
-
-- **DHCPDISCOVER** : Le client recherche les serveurs DHCP sur le réseau.
-- **DHCPOFFER** : Le serveur propose une adresse IP et des paramètres de configuration.
-- **DHCPREQUEST** : Le client accepte l'offre du serveur et demande la configuration.
-- **DHCPACK** : Le serveur confirme la configuration et l'allocation de l'adresse IP.
-
-### **Rôles du serveur et du client DHCP**
+### **Rôles du Serveur et du Client DHCP**
 
 - **Serveur DHCP :**
 
@@ -63,7 +53,7 @@ Client                              Serveur DHCP
   - Renouvelle son bail périodiquement avant expiration.
   - Libère l'adresse IP lorsqu'il n'en a plus besoin (par exemple, à l'extinction).
 
-## **Configurer Kea DHCP pour votre réseau**
+## **Installer et Configurer Kea DHCP et Kea DHCP-DDNS**
 
 ### **1. Installer Kea DHCP**
 
@@ -78,277 +68,266 @@ sudo apt install kea-dhcp4-server kea-dhcp-ddns-server
 
 ### **2. Configurer Kea DHCP**
 
-#### **Fichier de configuration du serveur DHCP : `/etc/kea/kea-dhcp4.conf`**
+#### **Fichier de Configuration du Serveur DHCP : `/etc/kea/kea-dhcp4.conf`**
 
-1. **Éditer le fichier de configuration :**
+Voici le contenu du fichier de configuration, avec des commentaires expliquant chaque section :
 
-   ```bash
-   sudo nano /etc/kea/kea-dhcp4.conf
-   ```
+```jsonc
+{
+    "Dhcp4": {
+        "interfaces-config": {
+            // On configure ici notre interface d'écoute sur la couche 2
+            "interfaces": [
+                "enp0s8" // Remplacez "enp0s8" par le nom de votre interface interne
+            ]
+        },
+        // On indique que l'on souhaite stocker la base de données des baux en fichier
+        "lease-database": {
+            "type": "memfile",
+            "lfc-interval": 3600
+        },
+        // Temporisateurs pour le renouvellement des baux
+        "renew-timer": 900,
+        "rebind-timer": 1800,
+        "valid-lifetime": 3600,
+        // Important : permet d'indiquer qu'il faut communiquer avec le service kea-dhcp-ddns-server 
+        "dhcp-ddns": {
+            "enable-updates": true
+        },
+        // On indique le suffixe DNS de notre zone locale
+        "ddns-qualifying-suffix": "learn-it.local",
+        "ddns-override-client-update": true,
+        // Il s'agit des options passées aux clients DHCP
+        "option-data": [
+            {
+                // On indique le serveur DNS à utiliser
+                "name": "domain-name-servers",
+                "data": "192.168.200.254"
+            },
+            {
+                // On indique le suffixe DNS à utiliser
+                "name": "domain-name",
+                "data": "learn-it.local"
+            },
+            {
+                // On indique le domaine de recherche DNS
+                "name": "domain-search",
+                "data": "learn-it.local"
+            }
+        ],
+        // On définit ici nos sous-réseaux, nous n'en avons qu'un seul dans le cadre du TP
+        "subnet4": [
+            {
+                "subnet": "192.168.200.0/24",
+                // Dans ce réseau, nous définissons nos plages d'IP à allouer aux clients
+                "pools": [
+                    {
+                        // Nous n'en avons qu'une seule dans le cadre du TP
+                        "pool": "192.168.200.100 - 192.168.200.110"
+                    }
+                ],
+                "option-data": [
+                    {
+                        // On indique la passerelle (routeur par défaut) que les clients devront utiliser
+                        "name": "routers",
+                        "data": "192.168.200.254"
+                    }
+                ],
+                "reservations": []
+            }
+        ],
+        "loggers": [
+            {
+                "name": "kea-dhcp4",
+                "output_options": [
+                    {
+                        "output": "syslog",
+                        "pattern": "%-5p %m\n"
+                    }
+                ],
+                "severity": "INFO",
+                "debuglevel": 99
+            }
+        ]
+    }
+}
+```
 
-2. **Contenu du fichier avec commentaires :**
+**Explications :**
 
-   ```jsonc
-   {
-     "Dhcp4": {
-       // Configuration des interfaces sur lesquelles le serveur DHCP écoute
-       "interfaces-config": {
-         "interfaces": ["enp0s8"] // Remplacez par le nom de votre interface interne
-       },
+- **`interfaces-config`** : Spécifie l'interface réseau sur laquelle le serveur DHCP écoute. Remplacez `"enp0s8"` par le nom de votre interface interne.
+- **`lease-database`** : Configure la base de données des baux. Ici, nous utilisons un fichier en mémoire (`memfile`) avec un intervalle de nettoyage de 3600 secondes.
+- **`renew-timer`, `rebind-timer`, `valid-lifetime`** : Définissent les temporisateurs pour le renouvellement des baux DHCP.
+- **`dhcp-ddns`** : Active la communication avec le service `kea-dhcp-ddns-server` pour les mises à jour DNS dynamiques.
+- **`ddns-qualifying-suffix`** : Spécifie le suffixe DNS pour les mises à jour.
+- **`option-data`** : Définit les options DHCP à fournir aux clients, comme les serveurs DNS et le domaine.
+- **`subnet4`** : Définit le sous-réseau géré, les plages d'adresses IP, les options spécifiques (comme la passerelle), et les réservations (ici vide).
+- **`loggers`** : Configure la journalisation pour faciliter le dépannage.
 
-       // Configuration de la base de données des baux DHCP
-       "lease-database": {
-         "type": "memfile",
-         "persist": true,
-         "name": "/var/lib/kea/kea-leases4.csv"
-       },
+#### **Fichier de Configuration du Serveur DHCP-DDNS : `/etc/kea/kea-dhcp-ddns.conf`**
 
-       // Durée de validité des baux en secondes (ici 10 minutes)
-       "valid-lifetime": 600,
+Voici le contenu du fichier de configuration du service DHCP-DDNS :
 
-       // Définition des sous-réseaux gérés par le serveur DHCP
-       "subnet4": [
-         {
-           "subnet": "192.168.200.0/24",
-           // Plage d'adresses IP à allouer aux clients
-           "pools": [{ "pool": "192.168.200.100 - 192.168.200.110" }],
-           // Options DHCP à fournir aux clients
-           "option-data": [
-             { "name": "routers", "data": "192.168.200.254" }, // Passerelle par défaut
-             { "name": "domain-name", "data": "learn-it.local" }, // Nom de domaine
-             { "name": "domain-name-servers", "data": "192.168.200.254" } // Serveur DNS
-           ],
-           // Configuration des mises à jour DNS dynamiques
-           "ddns": {
-             "enable-updates": true,
-             "qualifying-suffix": "learn-it.local.",
-             "hostname": "%{hostname}.learn-it.local.",
-             "override-no-update": true
-           }
-         }
-       ],
+```jsonc
+{
+  "DhcpDdns": {
+    // Définition de la clé TSIG partagée avec le serveur DNS
+    "tsig-keys": [
+      {
+        "name": "rndc-key",
+        "algorithm": "HMAC-SHA256",
+        "secret": "VOTRE_CLÉ_SECRÈTE_IÇI" // Nous utiliserons la clé de /etc/bind/rndc.key
+      }
+    ],
+    // Définition des zones DNS à mettre à jour
+    // Zone directe
+    "forward-ddns": {
+      "ddns-domains": [
+        {
+          "name": "learn-it.local.",
+          "key-name": "rndc-key",
+          // Liste des serveurs DNS à mettre à jour
+          "dns-servers": [
+            {
+              "ip-address": "127.0.0.1"
+            }
+          ]
+        }
+      ]
+    },
+    // Zone inverse
+    "reverse-ddns": {
+      "ddns-domains": [
+        {
+          "name": "200.168.192.in-addr.arpa.",
+          "key-name": "rndc-key",
+          "dns-servers": [
+            {
+              "ip-address": "127.0.0.1"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
 
-       // Configuration du serveur DHCP-DDNS pour les mises à jour DNS
-       "dhcp-ddns": {
-         "enable-ddns": true,
-         "server-ip": "127.0.0.1",
-         "server-port": 53001,
-         "max-queue-size": 100
-       }
-     }
-   }
-   ```
+**Explications :**
 
-   **Explications :**
+- **`tsig-keys`** : Définit les clés TSIG utilisées pour sécuriser les mises à jour DNS. Nous utiliserons la clé existante `rndc-key` générée par **Bind9**.
+- **`forward-ddns`** : Configure les mises à jour DNS pour les enregistrements de type A (résolution directe) pour le domaine `learn-it.local`.
+- **`reverse-ddns`** : Configure les mises à jour DNS pour les enregistrements de type PTR (résolution inverse) pour la zone `200.168.192.in-addr.arpa`.
 
-   - **`interfaces-config`** : Spécifie l'interface réseau sur laquelle le serveur DHCP écoute. Remplacez `"enp0s8"` par le nom de votre interface interne.
-   - **`lease-database`** : Configure la base de données des baux. Ici, nous utilisons un fichier en mémoire (`memfile`).
-   - **`valid-lifetime`** : Durée en secondes pendant laquelle un bail est valide.
-   - **`subnet4`** : Définit le sous-réseau géré, les plages d'adresses IP, les options DHCP et les paramètres de mise à jour DNS.
-   - **`ddns`** : Active les mises à jour DNS dynamiques pour les clients de ce sous-réseau.
-   - **`dhcp-ddns`** : Configure la communication avec le serveur Kea DHCP-DDNS pour les mises à jour DNS.
+### **3. Utiliser la Clé TSIG Générée par Bind9**
 
-#### **Fichier de configuration du serveur DHCP-DDNS : `/etc/kea/kea-dhcp-ddns.conf`**
+Lors de l'installation de **Bind9**, une clé TSIG est générée automatiquement et stockée dans `/etc/bind/rndc.key`. Nous allons utiliser cette clé pour sécuriser les communications entre Kea et Bind9.
 
-1. **Éditer le fichier de configuration :**
+#### **Extraire la Clé TSIG**
 
-   ```bash
-   sudo nano /etc/kea/kea-dhcp-ddns.conf
-   ```
-
-2. **Contenu du fichier avec commentaires :**
-
-   ```jsonc
-   {
-     "DhcpDdns": {
-       // Configuration des niveaux de journalisation
-       "loggers": [
-         {
-           "name": "kea-dhcp-ddns",
-           "output_options": [{ "output": "stdout" }],
-           "severity": "INFO",
-           "debuglevel": 0
-         }
-       ],
-
-       // Configuration du socket de contrôle
-       "control-socket": {
-         "socket-type": "unix",
-         "socket-name": "/run/kea/kea-dhcp-ddns.sock"
-       },
-
-       // Adresse IP et port sur lesquels le serveur DHCP-DDNS écoute
-       "ip-address": "127.0.0.1",
-       "port": 53001,
-
-       // Clés TSIG pour sécuriser les mises à jour DNS
-       "tsig-keys": [
-         {
-           "name": "kea_ddns",
-           "algorithm": "HMAC-SHA256",
-           "secret": "VOTRE_CLÉ_SECRÈTE_IÇI" // Remplacez par la clé générée
-         }
-       ],
-
-       // Configuration des mises à jour DNS directes
-       "forward-ddns": {
-         "ddns-domains": [
-           {
-             "name": "learn-it.local.",
-             "key-name": "kea_ddns",
-             "dns-server": { "ip-address": "127.0.0.1", "port": 53 }
-           }
-         ]
-       },
-
-       // Configuration des mises à jour DNS inverses
-       "reverse-ddns": {
-         "ddns-domains": [
-           {
-             "name": "200.168.192.in-addr.arpa.",
-             "key-name": "kea_ddns",
-             "dns-server": { "ip-address": "127.0.0.1", "port": 53 }
-           }
-         ]
-       }
-     }
-   }
-   ```
-
-   **Explications :**
-
-   - **`tsig-keys`** : Définit les clés TSIG utilisées pour sécuriser les mises à jour DNS. La clé doit correspondre à celle configurée dans BIND.
-   - **`forward-ddns`** : Configure les mises à jour DNS pour les enregistrements de type A (résolution directe).
-   - **`reverse-ddns`** : Configure les mises à jour DNS pour les enregistrements de type PTR (résolution inverse).
-   - **`ddns-domains`** : Spécifie les domaines à mettre à jour et les serveurs DNS correspondants.
-
-### **3. Générer une Clé TSIG pour Sécuriser les Mises à Jour DNS**
-
-Les mises à jour DNS dynamiques doivent être sécurisées pour empêcher les mises à jour non autorisées. Nous utilisons des clés **TSIG** (Transaction SIGnature) pour authentifier les communications entre Kea et BIND.
-
-#### **Générer la clé TSIG**
-
-1. **Utiliser `dnssec-keygen` pour générer la clé :**
-
-   ```bash
-   sudo dnssec-keygen -a HMAC-SHA256 -b 256 -n HOST kea_ddns
-   ```
-
-   - **`-a HMAC-SHA256`** : Spécifie l'algorithme de hachage.
-   - **`-b 256`** : Taille de la clé en bits.
-   - **`-n HOST`** : Type de clé (hôte).
-   - **`kea_ddns`** : Nom de la clé.
-
-2. **Récupérer la clé générée :**
-
-   Deux fichiers sont créés, par exemple :
+1. **Afficher le contenu de `/etc/bind/rndc.key`** :
 
    ```bash
-   Kkea_ddns.+163+12345.key
-   Kkea_ddns.+163+12345.private
+   sudo cat /etc/bind/rndc.key
    ```
 
-3. **Extraire le secret de la clé :**
+2. **Copier le nom de la clé, l'algorithme et le secret**.
 
-   ```bash
-   sudo cat Kkea_ddns.+163+*.private | grep Key: | awk '{print $2}'
-   ```
-
-   - Copiez la valeur de la clé secrète (une chaîne encodée en Base64).
-
-#### **Configurer BIND pour accepter les mises à jour dynamiques**
-
-1. **Déplacer la clé dans le répertoire de configuration de BIND :**
-
-   ```bash
-   sudo mkdir -p /etc/bind/keys
-   sudo mv Kkea_ddns.+163+*.key /etc/bind/keys/kea_ddns.key
-   sudo mv Kkea_ddns.+163+*.private /etc/bind/keys/kea_ddns.private
-   ```
-
-2. **Éditer le fichier `/etc/bind/named.conf.local` :**
-
-   ```bash
-   sudo nano /etc/bind/named.conf.local
-   ```
-
-   Ajoutez la configuration pour la clé TSIG et mettez à jour les zones :
+   Exemple de contenu :
 
    ```bind
-   key "kea_ddns" {
+   key "rndc-key" {
        algorithm hmac-sha256;
-       secret "VOTRE_CLÉ_SECRÈTE_IÇI"; // Remplacez par la clé secrète
-   };
-
-   zone "learn-it.local" IN {
-       type master;
-       file "/var/lib/bind/zones/db.learn-it.local";
-       // Autoriser les mises à jour dynamiques sécurisées
-       update-policy {
-           grant kea_ddns zonesub ANY;
-       };
-   };
-
-   zone "200.168.192.in-addr.arpa" IN {
-       type master;
-       file "/var/lib/bind/zones/db.192.168.200";
-       // Autoriser les mises à jour dynamiques sécurisées
-       update-policy {
-           grant kea_ddns zonesub ANY;
-       };
+       secret "W1aFxOn2j0mDDBmENR8ppxKL/OaSx5BOAFI4W2t7MLI=";
    };
    ```
 
-   **Explications :**
+#### **Configurer Kea DHCP-DDNS avec la Clé TSIG**
 
-   - **`key`** : Déclare la clé TSIG avec son nom, son algorithme et le secret.
-   - **`update-policy`** : Autorise les mises à jour dynamiques des zones par les entités qui présentent la clé `kea_ddns`.
+- Dans le fichier `/etc/kea/kea-dhcp-ddns.conf`, remplacez `"VOTRE_CLÉ_SECRÈTE_IÇI"` par le secret extrait de `/etc/bind/rndc.key`.
+- Assurez-vous que le nom de la clé (`"rndc-key"`) et l'algorithme (`"HMAC-SHA256"`) correspondent.
 
-3. **Vérifier la configuration de BIND :**
+### **4. Configurer Bind9 pour Accepter les Mises à Jour Dynamiques**
 
-   ```bash
-   sudo named-checkconf
-   ```
+Nous devons configurer **Bind9** pour accepter les mises à jour DNS dynamiques sécurisées avec la clé TSIG.
 
-   Corrigez toute erreur éventuelle.
+#### **Éditer le Fichier `/etc/bind/named.conf.local`**
 
-4. **Redémarrer BIND :**
+Ajoutez la configuration pour la clé TSIG et mettez à jour les zones :
 
-   ```bash
-   sudo systemctl restart bind9
-   ```
+```bind
+include "/etc/bind/rndc.key";
 
-### **4. Démarrer et activer les services Kea**
+zone "learn-it.local" IN {
+    type master;
+    file "/var/lib/bind/zones/db.learn-it.local";
+    // Autoriser les mises à jour dynamiques sécurisées
+    update-policy {
+        grant rndc-key zonesub ANY;
+    };
+};
 
-1. **Démarrer le serveur DHCP-DDNS :**
+zone "200.168.192.in-addr.arpa" IN {
+    type master;
+    file "/var/lib/bind/zones/db.192.168.200";
+    // Autoriser les mises à jour dynamiques sécurisées
+    update-policy {
+        grant rndc-key zonesub ANY;
+    };
+};
+```
 
-   ```bash
-   sudo systemctl enable kea-dhcp-ddns-server
-   sudo systemctl start kea-dhcp-ddns-server
-   ```
+**Explications :**
 
-2. **Démarrer le serveur DHCP4 :**
+- **`include "/etc/bind/rndc.key";`** : Inclut le fichier contenant la clé TSIG.
+- **`update-policy`** : Autorise les mises à jour dynamiques pour les zones spécifiées, en utilisant la clé `rndc-key`.
 
-   ```bash
-   sudo systemctl enable kea-dhcp4-server
-   sudo systemctl start kea-dhcp4-server
-   ```
+#### **Vérifier les Permissions**
 
-### **5. Vérifier les configurations et les logs**
+Assurez-vous que l'utilisateur `bind` a les permissions nécessaires sur les fichiers de zone pour permettre les mises à jour dynamiques :
 
-- **Vérifier les logs de Kea DHCP4 :**
+```bash
+sudo chown bind:bind /var/lib/bind/zones/db.learn-it.local
+sudo chown bind:bind /var/lib/bind/zones/db.192.168.200
+```
+
+#### **Redémarrer Bind9**
+
+```bash
+sudo systemctl restart bind9
+```
+
+### **5. Démarrer et Activer les Services Kea**
+
+#### **Démarrer le Serveur DHCP-DDNS**
+
+```bash
+sudo systemctl enable kea-dhcp-ddns-server
+sudo systemctl start kea-dhcp-ddns-server
+```
+
+#### **Démarrer le Serveur DHCP4**
+
+```bash
+sudo systemctl enable kea-dhcp4-server
+sudo systemctl start kea-dhcp4-server
+```
+
+### **6. Vérifier les Configurations et les Logs**
+
+- **Vérifier les logs de Kea DHCP4** :
 
   ```bash
   sudo journalctl -u kea-dhcp4-server
   ```
 
-- **Vérifier les logs de Kea DHCP-DDNS :**
+- **Vérifier les logs de Kea DHCP-DDNS** :
 
   ```bash
   sudo journalctl -u kea-dhcp-ddns-server
   ```
 
-- **Vérifier les logs de BIND :**
+- **Vérifier les logs de Bind9** :
 
   ```bash
   sudo journalctl -u bind9
@@ -356,13 +335,13 @@ Les mises à jour DNS dynamiques doivent être sécurisées pour empêcher les m
 
 - **Analyser les logs pour détecter d'éventuelles erreurs ou problèmes de communication.**
 
-## **Tester le fonctionnement du DHCP avec mises à jour DNS dynamiques**
+## **Tester le Fonctionnement du DHCP avec Mises à Jour DNS Dynamiques**
 
-1. **Configurer le client Windows pour obtenir une IP automatiquement**
+1. **Configurer le Client Windows pour Obtenir une IP Automatiquement**
 
-   - Dans les paramètres réseau du client Windows, assurez-vous que l'option "Obtenir une adresse IP automatiquement" est sélectionnée.
+   - Dans les paramètres réseau du client Windows, assurez-vous que l'option **"Obtenir une adresse IP automatiquement"** est sélectionnée.
 
-2. **Vérifier que le client obtient une adresse IP**
+2. **Vérifier que le Client Obtient une Adresse IP**
 
    - Ouvrez une invite de commandes sur le client Windows et exécutez :
 
@@ -372,17 +351,37 @@ Les mises à jour DNS dynamiques doivent être sécurisées pour empêcher les m
 
    - Vérifiez que l'adresse IP attribuée est dans la plage `192.168.200.100 - 192.168.200.110`.
 
-3. **Vérifier la résolution DNS depuis server1**
+3. **Tester la Connectivité et la Résolution DNS**
 
-   - Sur **server1**, exécutez :
+   - **Depuis le client Windows** :
 
-     ```bash
-     dig client.learn-it.local
-     ```
+     - Pinger le serveur DNS :
 
-   - Vous devriez voir que `client.learn-it.local` résout à l'adresse IP attribuée au client Windows.
+       ```cmd
+       ping server1.learn-it.local
+       ```
 
-4. **Vérifier les enregistrements DNS sur le serveur**
+     - Vérifier la résolution DNS :
+
+       ```cmd
+       nslookup server1.learn-it.local
+       ```
+
+   - **Depuis server1** :
+
+     - Vérifier que le nom du client est enregistré dans le DNS :
+
+       ```bash
+       dig client.learn-it.local
+       ```
+
+     - Vérifier la résolution inverse :
+
+       ```bash
+       dig -x [adresse IP du client]
+       ```
+
+4. **Vérifier les Enregistrements DNS sur le Serveur**
 
    - Les mises à jour dynamiques modifient les fichiers de zone. Vous pouvez consulter le fichier de zone pour vérifier que l'enregistrement a été ajouté.
 
@@ -390,11 +389,11 @@ Les mises à jour DNS dynamiques doivent être sécurisées pour empêcher les m
      sudo cat /var/lib/bind/zones/db.learn-it.local
      ```
 
-   - Vous devriez voir une entrée pour `client`.
+   - Vous devriez voir une entrée pour le nom d'hôte du client.
 
-5. **Vérifier les logs pour les mises à jour DNS**
+5. **Vérifier les Logs pour les Mises à Jour DNS**
 
-   - Consultez les logs de BIND pour voir les mises à jour dynamiques :
+   - Consultez les logs de **Bind9** pour voir les mises à jour dynamiques :
 
      ```bash
      sudo journalctl -u bind9
@@ -402,46 +401,51 @@ Les mises à jour DNS dynamiques doivent être sécurisées pour empêcher les m
 
    - Recherchez des messages indiquant que des mises à jour ont été reçues du serveur DHCP-DDNS.
 
-## **Notes importantes**
+## **Notes Importantes**
 
-- **Sécurité des clés TSIG**
+- **Sécurité des Clés TSIG**
 
   - Les clés TSIG doivent être protégées. Ne partagez pas les clés secrètes et limitez les permissions des fichiers de clé.
+  - Le fichier `/etc/bind/rndc.key` est généralement protégé avec les permissions appropriées.
 
-- **Permissions des fichiers de zone**
+- **Permissions des Fichiers de Zone**
 
   - Assurez-vous que l'utilisateur `bind` a les permissions d'écriture sur les fichiers de zone pour permettre les mises à jour dynamiques.
 
+- **Synchronisation de l'Horloge Système**
+
+  - Les horloges des serveurs doivent être synchronisées (par exemple, en utilisant NTP) pour éviter des problèmes d'authentification avec TSIG.
+
+- **Validation des Configurations**
+
+  - Utilisez les commandes de vérification de configuration pour **Bind9** :
+
     ```bash
-    sudo chown bind:bind /var/lib/bind/zones/db.learn-it.local
-    sudo chown bind:bind /var/lib/bind/zones/db.192.168.200
+    sudo named-checkconf
+    sudo named-checkzone learn-it.local /var/lib/bind/zones/db.learn-it.local
     ```
 
-- **Synchronisation de l'horloge système**
+## **Comprendre l'Utilisation des Logs avec `journalctl`**
 
-  - Les horloges des serveurs doivent être synchronisées (par exemple, en utilisant NTP) pour éviter des problèmes d'authentification avec TSIG. (ici, nous travaillons sur la même machine, il ne devrait pas y avoir de problème)
-
-## **Comprendre l'utilisation des logs avec `journalctl`**
-
-- **Consulter les logs de Kea DHCP4 :**
+- **Consulter les logs de Kea DHCP4** :
 
   ```bash
   sudo journalctl -u kea-dhcp4-server
   ```
 
-- **Consulter les logs de Kea DHCP-DDNS :**
+- **Consulter les logs de Kea DHCP-DDNS** :
 
   ```bash
   sudo journalctl -u kea-dhcp-ddns-server
   ```
 
-- **Consulter les logs de BIND :**
+- **Consulter les logs de Bind9** :
 
   ```bash
   sudo journalctl -u bind9
   ```
 
-- **Suivre les logs en temps réel :**
+- **Suivre les logs en temps réel** :
 
   ```bash
   sudo journalctl -f -u kea-dhcp4-server
@@ -449,7 +453,7 @@ Les mises à jour DNS dynamiques doivent être sécurisées pour empêcher les m
   sudo journalctl -f -u bind9
   ```
 
-- **Analyse des logs :**
+- **Analyse des logs** :
 
   - Recherchez les messages d'erreur ou les avertissements.
   - Vérifiez que les mises à jour DNS sont correctement envoyées et traitées.
@@ -457,41 +461,40 @@ Les mises à jour DNS dynamiques doivent être sécurisées pour empêcher les m
 
 ## **Conclusion**
 
-En suivant ces étapes, vous avez configuré **Kea DHCP** sur **server1** pour fournir des adresses IP dynamiquement aux clients de votre réseau. Vous avez également mis en place les mises à jour DNS dynamiques (DDNS), ce qui permet d'automatiser l'enregistrement des noms de machines dans le serveur DNS.
-
-Cette configuration assure que les enregistrements DNS sont toujours à jour avec les adresses IP attribuées, facilitant la gestion du réseau et améliorant la fiabilité de la résolution des noms.
+En suivant ces étapes, vous avez configuré **Kea DHCP** sur **server1** pour fournir des adresses IP dynamiquement aux clients de votre réseau, et mis en place les mises à jour DNS dynamiques (DDNS) sécurisées avec TSIG. Cela permet d'automatiser l'enregistrement des noms de machines dans le serveur DNS, assurant que les enregistrements DNS sont toujours à jour avec les adresses IP attribuées.
 
 ---
 
-**Récapitulatif des étapes :**
+**Récapitulatif des Étapes :**
 
-1. **Comprendre le fonctionnement du protocole DHCP** (client/serveur).
-2. **Installer Kea DHCP** et le serveur DHCP-DDNS.
-3. **Générer une clé TSIG** pour sécuriser les mises à jour DNS.
-4. **Configurer Kea DHCP** dans `/etc/kea/kea-dhcp4.conf` avec des commentaires explicatifs.
-5. **Configurer Kea DHCP-DDNS** dans `/etc/kea/kea-dhcp-ddns.conf` avec des commentaires.
-6. **Configurer BIND** pour accepter les mises à jour dynamiques sécurisées avec TSIG.
-7. **Démarrer les services** Kea DHCP et DHCP-DDNS.
-8. **Tester le fonctionnement** en attribuant une adresse IP à un client et en vérifiant les mises à jour DNS.
-9. **Utiliser `journalctl`** pour surveiller les logs et diagnostiquer les problèmes.
+1. **Installer Kea DHCP et Kea DHCP-DDNS**.
+2. **Configurer Kea DHCP** en utilisant le fichier `/etc/kea/kea-dhcp4.conf` fourni, avec les commentaires explicatifs.
+3. **Configurer Kea DHCP-DDNS** en utilisant le fichier `/etc/kea/kea-dhcp-ddns.conf` fourni, en utilisant la clé TSIG générée par **Bind9**.
+4. **Configurer Bind9** pour accepter les mises à jour dynamiques sécurisées en incluant le fichier `/etc/bind/rndc.key` et en ajustant les zones.
+5. **Démarrer et activer les services Kea DHCP et Kea DHCP-DDNS**.
+6. **Vérifier les configurations et les logs** pour s'assurer que tout fonctionne correctement.
+7. **Tester le fonctionnement** en attribuant une adresse IP à un client et en vérifiant les mises à jour DNS.
 
 ---
 
-**Prochaines étapes :**
+**Prochaines Étapes :**
 
 - **Surveiller les services** pour s'assurer qu'ils fonctionnent correctement sur la durée.
 - **Tester avec plusieurs clients** pour vérifier la robustesse de la configuration.
-- **Explorer les fonctionnalités avancées de Kea**, comme les réservations d'adresses, les options spécifiques aux clients, ou l'intégration avec une base de données pour les baux DHCP.
-- **Assurer la sécurité du réseau** en mettant en place des mesures supplémentaires, comme des pare-feu ou des contrôles d'accès.
-
----
-
-**Remarques finales :**
-
-- **Documenter votre configuration** pour faciliter la maintenance future.
-- **Rester vigilant sur les mises à jour de sécurité** pour Kea, BIND et le système d'exploitation.
 - **Continuer à approfondir vos connaissances** sur les services réseau pour améliorer et optimiser votre infrastructure.
 
 ---
 
-**Félicitations pour avoir mis en place un service DHCP avancé avec des mises à jour DNS dynamiques !**
+**Félicitations pour avoir mis en place un service DHCP avancé avec des mises à jour DNS dynamiques sécurisées !**
+
+---
+
+**Remarques Finales :**
+
+- **Documentez vos configurations** pour faciliter la maintenance future.
+- **Assurez-vous que les services démarrent automatiquement** au démarrage du système.
+- **Restez vigilant sur les mises à jour de sécurité** pour **Kea**, **Bind9** et le système d'exploitation.
+
+---
+
+**Bon travail et bonne continuation dans votre apprentissage de l'administration système !**
