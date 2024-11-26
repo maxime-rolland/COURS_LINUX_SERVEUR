@@ -31,7 +31,7 @@
 - **Commandes utiles** :
 
   ```bash
-  sudo systemctl start|stop|restart|status nom_du_service
+  sudo systemctl start|stop|restart|reload|status nom_du_service
   ```
 
 - **Permissions** :
