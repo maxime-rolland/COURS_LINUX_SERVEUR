@@ -195,7 +195,6 @@ tar -xzvf glpi-10.0.7.tgz
 
   ```bash
   sudo chown -R www-data:www-data /var/www/glpi.learn-it.local
-  sudo chmod -R 755 /var/www/glpi.learn-it.local
   ```
 
 ### **3. Créer la base de données pour GLPI**
@@ -209,9 +208,9 @@ sudo mysql -u root -p
 Dans le shell MariaDB, exécutez les commandes suivantes :
 
 ```sql
-CREATE DATABASE glpi_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'glpi_user'@'localhost' IDENTIFIED BY 'password_glpi';
-GRANT ALL PRIVILEGES ON glpi_db.* TO 'glpi_user'@'localhost';
+CREATE DATABASE glpi_db;
+CREATE USER 'glpi_user' IDENTIFIED BY 'password_glpi';
+GRANT ALL PRIVILEGES ON glpi_db.* TO 'glpi_user';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -295,7 +294,7 @@ EXIT;
 
 - **Depuis le client Windows, ouvrez un navigateur web et accédez à :**
 
-  ```
+  ```web
   http://glpi.learn-it.local
   ```
 
