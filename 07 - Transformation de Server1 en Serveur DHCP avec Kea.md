@@ -25,17 +25,13 @@ Le processus DHCP suit une séquence d'échanges entre le client et le serveur, 
 
 **Schéma du processus DORA :**
 
-```ini
-Client                              Serveur DHCP
-   |                                      |
-   | -- DHCPDISCOVER (broadcast) -->      |
-   |                                      |
-   | <-- DHCPOFFER (broadcast) --------   |
-   |                                      |
-   | -- DHCPREQUEST (broadcast) -->       |
-   |                                      |
-   | <-- DHCPACK (broadcast) ----------   |
-   |                                      |
+```mermaid
+sequenceDiagram
+    Client-->>Serveur DHCP: DHCPDISCOVER (broadcast)
+    Serveur DHCP-->>Client: DHCPOFFER (broadcast)
+    Client-->>Serveur DHCP: DHCPREQUEST (broadcast)
+    Serveur DHCP-->>Client: DHCPACK (broadcast)
+    
 ```
 
 ### **Rôles du Serveur et du Client DHCP**
