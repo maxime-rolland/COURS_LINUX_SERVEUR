@@ -113,7 +113,7 @@ Cette partie est inutile si vous utilisez l'interface web pour installer wordpre
   ```
 
 - **Incrémentez le numéro de série du SOA dans le fichier de zone :**
-Cette partie est utilise uniquement lorsque vous avez un serveur secondaire sur votre zone.
+Cette partie est utile uniquement lorsque vous avez un serveur secondaire sur votre zone.
   - Modifiez la valeur du `Serial` en l'incrémentant de 1.
 
 - **Redémarrez Bind9 pour appliquer les modifications :**
