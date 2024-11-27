@@ -219,6 +219,19 @@ La première carte réseau de server1 est configurée en DHCP et obtient sa conf
 prepend domain-name-servers 127.0.0.1;
 ```
 
+## **Configurer le client DNS de server2 pour utiliser le serveur DNS server1
+
+Le client DNS sous debian utilise le fichier de configuration `/etc/resolv.conf` (le créer s'il n'existe pas)
+
+```bash
+# Si l'utilitaire sudo est installé
+echo "nameserver 192.168.200.254" | sudo tee /etc/resolv.conf"
+
+# le cas échéant, passer en root et créer le fichier
+su -
+echo "nameserver 192.168.200.254" > /etc/resolv.conf
+```
+
 ## **Conclusion**
 
 En utilisant des enregistrements **CNAME** pour `site1`, `site2`, `site3` et `glpi`, nous avons simplifié la gestion de notre zone DNS. Cette approche offre une plus grande flexibilité et facilite la maintenance future, surtout si l'adresse IP du serveur hébergeant les sites web change.
