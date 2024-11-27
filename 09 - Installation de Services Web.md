@@ -266,10 +266,28 @@ EXIT;
   sudo a2ensite glpi.learn-it.local.conf
   ```
 
+- **Installer les extension PHP nécessaire au fonctionnement:**
+
+```bash
+sudo apt install php-gd php-intl php-ldap php-bz2 php-zip php-mbstring -y
+```
+
+- **Configurer PHP:**
+
+```bash
+sudo nano /etc/php/8.2/apache2/php.ini
+```
+
+Chercher l'instruction `session.cookie_httponly` suivante et ajouter `on` :
+
+```ini
+session.cookie_httponly = on
+```
+
 - **Redémarrer Apache pour appliquer les changements :**
 
   ```bash
-  sudo systemctl reload apache2
+  sudo systemctl restart apache2
   ```
 
 ### **6. Configurer les Entrées DNS**
