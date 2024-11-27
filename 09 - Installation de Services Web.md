@@ -104,6 +104,12 @@ Cette partie est inutile si vous utilisez l'interface web pour installer wordpre
   </VirtualHost>
   ```
 
+- **Activer le site `site1.learn-it.local` :**
+
+  ```bash
+  sudo a2ensite site1.learn-it.local.conf
+  ```
+
 ### **7. Configurer les Entrées DNS**
 
 - **Sur `server1` (votre serveur DNS), ajoutez un enregistrement CNAME pour `site1` pointant vers `server2.learn-it.local` dans le fichier de zone directe `/var/lib/bind/zones/db.learn-it.local` :**
