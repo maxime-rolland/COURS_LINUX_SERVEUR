@@ -225,7 +225,7 @@ Le client DNS sous debian utilise le fichier de configuration `/etc/resolv.conf`
 
 ```bash
 # Si l'utilitaire sudo est installé
-echo "nameserver 192.168.200.254" | sudo tee /etc/resolv.conf"
+echo "nameserver 192.168.200.254" | sudo tee /etc/resolv.conf
 
 # le cas échéant, passer en root et créer le fichier
 su -
