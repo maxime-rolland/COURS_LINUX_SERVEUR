@@ -7,6 +7,7 @@
 L'objectif de ces exercices est de simuler un réseau d'entreprise simple en configurant plusieurs services réseau sur des machines virtuelles. Vous allez apprendre à installer et configurer des serveurs Linux, à mettre en place des services essentiels tels que DNS, DHCP, passerelle réseau, serveurs web, et à sécuriser vos connexions avec SSH.
 
 **Étapes du TP :**
+![Infrastructure](assets/infrastructure.png)
 
 1. **Installation et configuration du laboratoire**
 
