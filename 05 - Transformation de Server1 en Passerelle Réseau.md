@@ -1,6 +1,6 @@
-## **Étape 5 : Transformation de Server1 en Passerelle Réseau**
+# **Étape 5 : Transformation de server1 en passerelle réseau**
 
-### **Comprendre le Routage, les Passerelles, et l'Intérêt du NAT/PAT (Masquerade)**
+## **Comprendre le routage, les passerelles, et l'intérêt du NAT/PAT (Masquerade)**
 
 - **Routage** : Le routage est le processus qui permet de transférer des paquets de données d'un réseau à un autre. Un routeur utilise des tables de routage pour déterminer le meilleur chemin vers la destination.
 
@@ -12,7 +12,7 @@
 
 - **Masquerade** : Dans le contexte de **nftables**, la cible `masquerade` est utilisée pour effectuer du NAT dynamique, en remplaçant l'adresse IP source des paquets sortants par l'adresse IP de l'interface de sortie. Cela permet aux appareils du réseau local d'accéder à Internet en utilisant l'adresse IP publique de la passerelle.
 
-### **Comprendre nftables (Framework NetFilter)**
+## **Comprendre nftables (Framework NetFilter)**
 
 - **nftables** est un framework qui remplace **iptables** pour la configuration du pare-feu du noyau Linux. Il offre une syntaxe unifiée pour le filtrage des paquets, le NAT, et d'autres fonctionnalités de sécurité réseau.
 
@@ -22,7 +22,7 @@
   - Meilleures performances.
   - Gestion plus flexible et modulaire des règles.
 
-### **Activer le Routage IP**
+## **Activer le routage IP**
 
 1. **Modifier le fichier `/etc/sysctl.conf`** :
 
@@ -32,7 +32,7 @@
 
    Décommentez ou ajoutez la ligne :
 
-   ```
+   ```ini
    net.ipv4.ip_forward=1
    ```
 
@@ -42,7 +42,7 @@
    sudo sysctl -p
    ```
 
-### **Configurer nftables Étape par Étape pour le NAT**
+## **Configurer nftables pour le NAT**
 
 1. **Installer nftables** :
 
@@ -124,17 +124,18 @@
    sudo systemctl start nftables
    ```
 
-### **Tester l'Accès Internet depuis le Réseau Interne**
+## **Tester l'accès internet depuis le réseau interne**
 
-- **Sur Server2** :
+- **Sur server2** :
 
   ```bash
   ping -c 4 8.8.8.8
   ```
 
-- **Sur le Client Windows** :
+- **Sur le client Windows** :
 
-  - Ouvrez un navigateur web et accédez à `http://www.google.com`.
-  - Si l'accès fonctionne, la passerelle est correctement configurée.
+   ```powershell
+   ping 8.8.8.8
+   ```
 
 ---

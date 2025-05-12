@@ -1,6 +1,7 @@
-## **Étape 2 : Configuration des Interfaces Réseaux**
+# **Étape 2 : Configuration des interfaces réseau**
 
-### **Configuration Réseau de Server1**
+
+## **Configuration réseau de server1**
 
 1. **Lister les interfaces réseaux disponibles** :
 
@@ -20,7 +21,7 @@
 
      Ajoutez ou modifiez les lignes pour l'interface NAT :
 
-     ```
+     ```bash
      auto enp0s3
      iface enp0s3 inet dhcp
      ```
@@ -31,7 +32,7 @@
 
    Ajoutez les lignes suivantes pour l'interface interne :
 
-   ```
+   ```bash
    auto enp0s8
    iface enp0s8 inet static
        address 192.168.200.254
@@ -57,7 +58,7 @@
    ping -c 4 google.com
    ```
 
-### **Configuration Réseau de Server2**
+## **Configuration réseau de server2**
 
 1. **Lister les interfaces réseaux disponibles** :
 
@@ -77,7 +78,7 @@
 
      Ajoutez les lignes suivantes :
 
-     ```
+     ```bash
      auto enp0s3
      iface enp0s3 inet static
          address 192.168.200.2
@@ -103,7 +104,7 @@
    ping -c 4 192.168.200.254
    ```
 
-### **Configuration Réseau du Client Windows**
+## **Configuration réseau du client Windows**
 
 1. **Configurer l'interface réseau** :
 

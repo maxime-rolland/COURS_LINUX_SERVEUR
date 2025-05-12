@@ -1,6 +1,6 @@
-## **Étape 1 : Installation et Configuration du Laboratoire**
+# **Étape 1 : Installation et configuration du laboratoire**
 
-### **Installer Server1**
+## **Installer server1**
 
 - **Système d'exploitation** : Debian 12 (Bookworm)
 - **Ressources** :
@@ -16,7 +16,7 @@
   - **Mot de passe root** : `Azerty01`
   - **Utilisateur** : Créez un utilisateur nommé `user` avec le mot de passe `Azerty02`.
 
-### **Installer Server2**
+## **Installer server2**
 
 - **Système d'exploitation** : Debian 12 (Bookworm)
 - **Ressources** :
@@ -27,11 +27,10 @@
 - **Paramètres système** :
 
   - **Nom du serveur** : `server2`
-  - **Nom de domaine** : `learn-it.local`
   - **Mot de passe root** : `Azerty01`
   - **Utilisateur** : Créez un utilisateur nommé `user` avec le mot de passe `Azerty02`.
 
-### **Installer le Client Windows**
+## **Installer le client Windows**
 
 - **Système d'exploitation** : Windows 10 ou Windows 11
 - **Ressources** :

@@ -1,8 +1,8 @@
-## **Étape 3 : Connexion SSH aux Serveurs**
+# **Étape 3 : Connexion SSH aux serveurs**
 
-### **Installer le Serveur SSH sur Server1 et Server2**
+## **Installer le serveur SSH sur server1 et server2**
 
-1. **Vérifier si OpenSSH est installé** :
+1. **Vérifier si openSSH est installé** :
 
    ```bash
    sudo apt install openssh-server
@@ -18,9 +18,9 @@
 
    Le service doit être actif et en cours d'exécution.
 
-### **Générer une Paire de Clés SSH sur le Client Windows**
+## **Générer une paire de clés SSH sur le client Windows**
 
-1. **Ouvrir PowerShell** :
+1. **Ouvrir powerShell** :
 
    - Appuyez sur **Windows + X** et sélectionnez **Windows PowerShell**.
 
@@ -33,7 +33,7 @@
    - Acceptez l'emplacement par défaut (`C:\Users\VotreNom\.ssh\id_rsa`).
    - Choisissez une passphrase ou appuyez sur **Entrée** pour ne pas en mettre.
 
-### **Configurer l'Authentification par Clé SSH sur les Serveurs**
+## **Configurer l'authentification par clé SSH sur les serveurs**
 
 1. **Copier la clé publique sur Server1** :
 
@@ -62,7 +62,7 @@
 
 2. **Répéter les étapes pour Server2** (IP : `192.168.200.2`)
 
-### **Se Connecter en SSH depuis le Client Windows**
+## **Se connecter en SSH depuis le client Windows**
 
 - Vous pouvez maintenant vous connecter sans mot de passe :
 
