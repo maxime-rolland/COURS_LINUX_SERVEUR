@@ -99,7 +99,7 @@ $TTL    604800
 ;
 @       IN      NS      server1.learn-it.local.
 server1 IN      A       192.168.200.254
-server2 IN      A       192.168.200.2
+server2 IN      A       192.168.200.200
 client  IN      A       192.168.200.1
 
 ; Utilisation de CNAME pour les sites web
@@ -203,7 +203,7 @@ nslookup site1.learn-it.local
 nslookup glpi.learn-it.local
 ```
 
-Vous devriez voir que ces noms de domaine résolvent à l'adresse IP de `server2.learn-it.local` (`192.168.200.2`).
+Vous devriez voir que ces noms de domaine résolvent à l'adresse IP de `server2.learn-it.local` (`192.168.200.200`).
 
 ## **Avantages de l'utilisation des CNAME dans ce contexte**
 
