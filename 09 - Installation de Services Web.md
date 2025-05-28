@@ -275,7 +275,7 @@ EXIT;
 - **Installer les extension PHP nécessaire au fonctionnement:**
 
 ```bash
-sudo apt install php-gd php-intl php-ldap php-bz2 php-zip php-mbstring -y
+sudo apt install php-gd php-intl php-ldap php-bz2 php-zip php-mbstring php-dom php-curl -y
 ```
 
 - **Configurer PHP:**
