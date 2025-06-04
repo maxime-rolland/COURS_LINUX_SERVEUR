@@ -219,7 +219,7 @@ La première carte réseau de server1 est configurée en DHCP et obtient sa conf
 prepend domain-name-servers 127.0.0.1;
 ```
 
-## **Configurer un forwarder pour résoudre des noms de domaine externes
+## **Configurer un forwarder pour résoudre des noms de domaine externes**
 
 Afin de résoudre les noms de domaine qui ne sont pas gérés localement par notre serveur DNS (c’est-à-dire pour lesquels il n’est pas autoritaire), comme par exemple `google.fr`, il est nécessaire de configurer un forwarder.
 
@@ -257,7 +257,7 @@ options {
 };
 ```
 
-## **Configurer le client DNS de server2 pour utiliser le serveur DNS server1
+## **Configurer le client DNS de server2 pour utiliser le serveur DNS server1**
 
 Le client DNS sous debian utilise le fichier de configuration `/etc/resolv.conf` (le créer s'il n'existe pas)
 
