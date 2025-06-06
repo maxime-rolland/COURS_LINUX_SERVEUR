@@ -321,8 +321,9 @@ sudo systemctl start kea-dhcp4-server
 - **Vérifier les logs de Bind9** :
 
   ```bash
-  sudo journalctl -u bind9
+  sudo journalctl -u named
   ```
+  (Note : `bind9` est un alias de `named` pour `systemctl`, mais `journalctl` ne prend pas cet alias en compte.)
 
 - **Analyser les logs pour détecter d'éventuelles erreurs ou problèmes de communication.**
 
@@ -387,7 +388,7 @@ sudo systemctl start kea-dhcp4-server
    - Consultez les logs de **Bind9** pour voir les mises à jour dynamiques :
 
      ```bash
-     sudo journalctl -u bind9
+     sudo journalctl -u named
      ```
 
    - Recherchez des messages indiquant que des mises à jour ont été reçues du serveur DHCP-DDNS.
@@ -433,7 +434,7 @@ sudo systemctl start kea-dhcp4-server
 - **Consulter les logs de Bind9** :
 
   ```bash
-  sudo journalctl -u bind9
+  sudo journalctl -u named
   ```
 
 - **Suivre les logs en temps réel** :
@@ -441,7 +442,7 @@ sudo systemctl start kea-dhcp4-server
   ```bash
   sudo journalctl -f -u kea-dhcp4-server
   sudo journalctl -f -u kea-dhcp-ddns-server
-  sudo journalctl -f -u bind9
+  sudo journalctl -f -u named
   ```
 
 - **Analyse des logs** :
