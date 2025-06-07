@@ -1,0 +1,38 @@
+services:
+  guacd:
+    image: guacamole/guacd
+    restart: always
+    environment:
+      GUACD_LOG_LEVEL: debug
+    volumes:
+    - ./records:/var/lib/guacamole/recordings
+
+  guacamole:
+    image: guacamole/guacamole
+    group_add:
+      - 1000
+    restart: always
+    environment:
+      GUACD_HOSTNAME: guacd
+      RECORDING_SEARCH_PATH: /var/lib/guacamole/recordings
+      HISTORY_PATH: /var/lib/guacamole/recordings
+      MYSQL_HOSTNAME: db
+      MYSQL_DATABASE: guacamoledb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: Azerty01
+    ports:
+      - 8080:8080
+    volumes:
+      - ./records:/var/lib/guacamole/recordings
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: guacamoledb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: Azerty01
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - ./db:/var/lib/mysql
+      - ./initdb.sql:/initdb.sql
