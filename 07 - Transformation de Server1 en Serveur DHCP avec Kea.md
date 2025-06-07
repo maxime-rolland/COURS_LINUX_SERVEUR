@@ -74,7 +74,7 @@ Voici le contenu du fichier de configuration, avec des commentaires expliquant c
         "interfaces-config": {
             // On configure ici notre interface d'écoute sur la couche 2
             "interfaces": [
-                "eth1"
+                "A_DEFINIR"
             ]
         },
         // On indique que l'on souhaite stocker la bdd des baux en fichier
@@ -150,7 +150,10 @@ Voici le contenu du fichier de configuration, avec des commentaires expliquant c
 
 **Explications :**
 
-- **`interfaces-config`** : Spécifie l'interface réseau sur laquelle le serveur DHCP écoute. Remplacez `"enp0s8"` par le nom de votre interface interne.
+> [!IMPORTANT]
+> Pensez à adapter la configuration à votre interface réseau.
+
+- **`interfaces-config`** : Spécifie l'interface réseau sur laquelle le serveur DHCP écoute. Remplacez `"A_MODIFIER"` par le nom de votre interface interne.
 - **`lease-database`** : Configure la base de données des baux. Ici, nous utilisons un fichier en mémoire (`memfile`) avec un intervalle de nettoyage de 3600 secondes.
 - **`renew-timer`, `rebind-timer`, `valid-lifetime`** : Définissent les temporisateurs pour le renouvellement des baux DHCP.
 - **`dhcp-ddns`** : Active la communication avec le service `kea-dhcp-ddns-server` pour les mises à jour DNS dynamiques.
@@ -323,6 +326,7 @@ sudo systemctl start kea-dhcp4-server
   ```bash
   sudo journalctl -u named
   ```
+
   (Note : `bind9` est un alias de `named` pour `systemctl`, mais `journalctl` ne prend pas cet alias en compte.)
 
 - **Analyser les logs pour détecter d'éventuelles erreurs ou problèmes de communication.**
