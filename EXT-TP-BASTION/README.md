@@ -72,11 +72,7 @@ graph TD
     A[Client Web<br/>Navigateur] -->|HTTP/HTTPS| B[Guacamole Web<br/>Port 8080]
     B -->|guacd protocol| C[guacd<br/>Démon proxy]
     C -->|RDP/SSH/VNC| D[Serveurs cibles<br/>Windows/Linux]
-    
-    style A fill:#e1f5fe
-    style B fill:#f3e5f5
-    style C fill:#e8f5e8
-    style D fill:#fff3e0
+
 ```
 
 ---
