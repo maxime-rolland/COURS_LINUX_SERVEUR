@@ -190,6 +190,67 @@ services:
 
 8. **Ajouter une connexion RDP** vers la VM Windows
 
+   Une fois connecté à l'interface Guacamole, vous devez configurer une connexion RDP :
+
+   a) **Accéder aux paramètres d'administration**
+      - Cliquer sur votre nom d'utilisateur (`guacadmin`) en haut à droite
+      - Sélectionner **"Paramètres"** dans le menu déroulant
+      - Aller dans l'onglet **"Connexions"**
+
+   b) **Créer une nouvelle connexion**
+      - Cliquer sur **"Nouvelle connexion"**
+      - **Nom** : `Windows-VM` (ou nom descriptif de votre choix)
+      - **Protocole** : Sélectionner **"RDP"**
+
+   c) **Configuration des paramètres réseau**
+      - **Nom d'hôte** : `IP_DE_VOTRE_VM_WINDOWS` (ex: `192.168.1.100`, ou le nom DNS si configuré)
+      - **Port** : `PORT_SI_DIFERENT` (port par défaut RDP : 3389)
+      - **Nom d'utilisateur** : Utilisateur Windows de votre VM
+      - **Mot de passe** : Mot de passe de l'utilisateur Windows
+      - **Domaine** : Laisser vide (sauf si VM jointe à un domaine)   d) **Paramètres d'affichage (optionnel)**
+      - **Résolution** : `1920x1080` ou selon votre préférence
+      - **Profondeur de couleur** : `True color (32-bit)` pour la meilleure qualité
+      - **DPI** : `96` (valeur standard)
+
+   e) **Paramètres de clavier (important)**
+      - **Agencement du clavier** : Sélectionner votre layout selon votre clavier physique
+        - `français (Azerty)` : Clavier français AZERTY
+      
+      > 🔧 **Résolution des problèmes de clavier** :
+      > - **Mauvaise correspondance des touches** : Vérifier que le layout correspond à votre clavier physique
+      > - **Touches mortes non fonctionnelles** : Utiliser le layout exact de votre système d'exploitation
+      > - **Raccourcis clavier non reconnus** : Certains raccourcis peuvent être interceptés par le navigateur
+
+   f) **Paramètres d'enregistrement (pour l'audit)**
+      - **Chemin d'enregistrement** : Laisser par défaut
+      - **Nom d'enregistrement** : `${HISTORY_PATH}/${HISTORY_UUID}`
+      - **Créer un répertoire d'enregistrement** : Coché
+      - **Exclure la souris** : Selon préférence
+
+   f) **Sauvegarder la connexion**
+      - Cliquer sur **"Sauvegarder"** en bas de la page
+      - La nouvelle connexion apparaît dans la liste
+
+   g) **Tester la connexion**
+      - Retourner à l'accueil de Guacamole
+      - Cliquer sur la connexion **"Windows-VM"** nouvellement créée
+      - Vérifier que la session RDP s'établit correctement
+
+   > 📋 **Prérequis côté Windows** :
+   > - Services **Bureau à distance** activés
+   > - Utilisateur autorisé pour les connexions RDP
+   > - Pare-feu Windows configuré pour autoriser RDP (port 3389)
+   > - VM accessible réseau depuis le serveur Guacamole   > 🔧 **Dépannage courant** :
+   > - **Connexion refusée** : Vérifier que RDP est activé sur Windows
+   > - **Authentification échouée** : Vérifier identifiants et autorisations
+   > - **Timeout réseau** : Vérifier connectivité réseau et pare-feu
+   > - **Problèmes de clavier** : 
+   >   - Vérifier la disposition du clavier dans les paramètres de connexion
+   >   - Tester avec `en-us-qwerty` si le layout français ne fonctionne pas
+   >   - Redémarrer la session après changement de layout
+   > - **Affichage dégradé** : Réduire la profondeur de couleur ou la résolution
+   > - **Session lente** : Optimiser les paramètres réseau et d'affichage
+
 9. **Tester une session** et vérifier les enregistrements dans `./records`
 
 ---
