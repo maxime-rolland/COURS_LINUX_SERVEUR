@@ -142,43 +142,6 @@ services:
 
 ---
 
-## 🔐 Sécurisation obligatoire
-
-### HTTPS avec reverse proxy
-
-- Guacamole expose son interface en **HTTP sur port 8080**, non sécurisé
-- Il est **obligatoire** d'ajouter un **reverse proxy** (ex : **Nginx**, **Traefik**) :
-
-  - Rediriger le trafic HTTP vers HTTPS
-  - Ajouter un **certificat SSL/TLS** via Let's Encrypt ou ACME
-  - Exemple avec Nginx :
-
-    ```nginx
-    server {
-        listen 443 ssl;
-        server_name guac.domain.local;
-
-        ssl_certificate /etc/nginx/certs/cert.pem;
-        ssl_certificate_key /etc/nginx/certs/key.pem;
-
-        location / {
-            proxy_pass http://localhost:8080/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-        }
-    }
-    ```
-
-### Gestion des accès utilisateur
-
-- ❌ **Ne jamais laisser** le compte **guacadmin** actif en production
-- ✅ Intégrer l'authentification via **LDAP/AD** ou gestionnaire d'identité
-- ✅ Appliquer le **principe du moindre privilège**
-- ✅ Auditer les connexions et droits régulièrement
-- ✅ Changer les **mots de passe par défaut**
-
----
-
 ## 🧪 Atelier pratique
 
 > **Objectif** : Déployer un bastion complet avec Guacamole et tester les connexions
@@ -228,9 +191,158 @@ services:
 
 9. **Tester une session** et vérifier les enregistrements dans `./records`
 
-10. **Bonus** : Mettre en place un reverse proxy HTTPS
-
 ---
+
+## 🔐 Sécurisation obligatoire
+
+### HTTPS avec reverse proxy
+
+#### 🚨 Pourquoi un reverse proxy est-il essentiel ?
+
+- Guacamole expose son interface en **HTTP sur port 8080**, **non chiffrée et non sécurisée**
+- Un **reverse proxy** (ex : **Nginx**, **Traefik**, **Apache**) apporte des avantages critiques :
+
+**🔒 Sécurité :**
+- **Chiffrement SSL/TLS** : Protection des données en transit (identifiants, sessions)
+- **Terminaison SSL** : Déchargement de la charge cryptographique
+- **Protection contre les attaques** : Rate limiting, WAF, filtrage IP
+- **Masquage de l'architecture** : Dissimulation des services internes
+
+**⚡ Performance :**
+- **Mise en cache** : Ressources statiques (CSS, JS, images)
+- **Compression** : Gzip/Brotli pour réduire la bande passante
+- **Load balancing** : Répartition de charge sur plusieurs instances
+- **Keep-alive** : Réutilisation des connexions
+
+**🛠️ Fonctionnalités avancées :**
+- **Authentification centralisée** : SSO, OAuth, LDAP
+- **Logs centralisés** : Audit et monitoring
+- **Redirection automatique** : HTTP → HTTPS
+- **Headers de sécurité** : HSTS, CSP, X-Frame-Options
+
+#### 🌐 En environnement de production
+
+Pour un déploiement **professionnel**, cette configuration est **obligatoire** :
+
+**Prérequis production :**
+- **IP publique** fixe ou dynamique avec DDNS
+- **Nom de domaine** public (ex: `bastion.entreprise.com`)
+- **Enregistrements DNS** pointant vers le serveur
+
+**Exemple avec Certbot (Let's Encrypt) :**
+
+1. **Installation du reverse proxy et Certbot**
+   ```bash
+   sudo apt update
+   sudo apt install nginx certbot python3-certbot-nginx
+   ```
+
+2. **Configuration Nginx basique**
+   ```nginx
+   # /etc/nginx/sites-available/guacamole
+   server {
+       listen 80;
+       server_name bastion.entreprise.com;
+       
+       location / {
+           proxy_pass http://localhost:8080/;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   ```
+
+3. **Activation du site**
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/guacamole /etc/nginx/sites-enabled/
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
+
+4. **Génération automatique du certificat SSL**
+   ```bash
+   sudo certbot --nginx -d bastion.entreprise.com
+   ```
+
+   Certbot modifie automatiquement la configuration pour :
+   - Rediriger HTTP vers HTTPS
+   - Configurer les certificats SSL
+   - Programmer le renouvellement automatique
+
+**Configuration finale automatisée par Certbot :**
+```nginx
+server {
+    listen 443 ssl;
+    server_name bastion.entreprise.com;
+
+    ssl_certificate /etc/letsencrypt/live/bastion.entreprise.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/bastion.entreprise.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Headers de sécurité
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+
+    location / {
+        proxy_pass http://localhost:8080/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket support pour Guacamole
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# Redirection HTTP → HTTPS
+server {
+    listen 80;
+    server_name bastion.entreprise.com;
+    return 301 https://$server_name$request_uri;
+}
+```
+
+#### 🧪 Limitation dans cette maquette
+
+**Pourquoi ne pas l'implémenter ici ?**
+
+❌ **Pas d'IP publique** : Les VMs sont dans un réseau privé/NAT
+❌ **Pas de nom de domaine** : Aucun FQDN accessible depuis Internet
+❌ **Pas de résolution DNS** : Let's Encrypt ne peut pas valider le domaine
+❌ **Certificats auto-signés** : Alertes de sécurité dans le navigateur
+
+**Alternatives pour la maquette :**
+- **Certificats auto-signés** : Fonctionnels mais avec alertes navigateur
+- **Accès direct HTTP** : Acceptable uniquement en environnement de test
+- **mkcert** : Génération de certificats locaux pour le développement
+
+**En production, JAMAIS d'accès HTTP non chiffré pour un bastion !**
+
+#### 🔧 Exemple de configuration auto-signée (test uniquement)
+
+```bash
+# Génération d'un certificat auto-signé
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/nginx/ssl/guac.key \
+    -out /etc/nginx/ssl/guac.crt \
+    -subj "/C=FR/ST=State/L=City/O=Organization/OU=OrgUnit/CN=guac.learn-it.local"
+```
+
+### Gestion des accès utilisateur
+
+- ❌ **Ne jamais laisser** le compte **guacadmin** actif en production
+- ✅ Intégrer l'authentification via **LDAP/AD** ou gestionnaire d'identité
+- ✅ Appliquer le **principe du moindre privilège**
+- ✅ Auditer les connexions et droits régulièrement
+- ✅ Changer les **mots de passe par défaut**
+
 
 ## 📚 Ressources complémentaires
 
