@@ -171,11 +171,12 @@ services:
    ```bash
    # Attendre que MySQL soit complètement démarré
    docker compose logs db
-   
-   # Exécuter le script d'initialisation dans le conteneur MySQL
-   docker compose exec -T db mysql -u user -pAzerty01 guacamoledb < initdb.sql
+     # Exécuter le script d'initialisation dans le conteneur MySQL
+   docker compose exec -T db mysql -u ${MYSQL_USER:-user} -p${MYSQL_PASSWORD:-Azerty01} ${MYSQL_DATABASE:-guacamoledb} < initdb.sql
    ```
    > Cette étape importe la structure de base de données générée précédemment dans le conteneur MySQL
+   > 
+   > **Note** : Cette commande utilise les variables d'environnement définies dans le `docker-compose.yml`. Si vous avez modifié les valeurs par défaut dans votre configuration, adaptez la commande en conséquence.
 
 6. **Vérifier le déploiement**
    ```bash
