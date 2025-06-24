@@ -173,7 +173,7 @@ services:
    docker compose logs db
    
    # Exécuter le script d'initialisation dans le conteneur MySQL
-   docker compose exec db mysql -u user -p Azerty01 guacamoledb < initdb.sql
+   docker compose exec -T db mysql -u user -pAzerty01 guacamoledb < initdb.sql
    ```
    > Cette étape importe la structure de base de données générée précédemment dans le conteneur MySQL
 
