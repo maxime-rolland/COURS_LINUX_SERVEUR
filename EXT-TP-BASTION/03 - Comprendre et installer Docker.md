@@ -451,9 +451,137 @@ docker system df
    docker run --memory=512m --cpus=1 <image>
    ```
 
-3. **Utiliser des images officielles et à jour**
+3. **Utiliser des images officielles et vérifiées**
+
+   #### **🏷️ Pourquoi privilégier les images officielles ?**
+
+   **Images officielles** (ex: `nginx`, `mysql`, `ubuntu`) :
+   - ✅ **Maintenues par les éditeurs officiels** ou l'équipe Docker
+   - ✅ **Audits de sécurité réguliers** et correctifs appliqués rapidement
+   - ✅ **Documentation complète** et exemples d'utilisation
+   - ✅ **Optimisations** pour la conteneurisation
+   - ✅ **Mises à jour fréquentes** avec cycle de vie prévisible
+
+   **Images vérifiées** (Docker Verified Publisher) :
+   - ✅ **Certification Docker** : validation de l'identité de l'éditeur
+   - ✅ **Processus de build transparent** et reproductible
+   - ✅ **Analyse de vulnérabilités** automatisée
+   - ✅ **Support commercial** disponible
+
+   #### **⚠️ Risques des images non officielles**
+
+   - 🚨 **Malware et backdoors** : Code malveillant injecté
+   - 🚨 **Vulnérabilités non corrigées** : Failles de sécurité connues
+   - 🚨 **Maintenance incertaine** : Abandon du projet sans préavis
+   - 🚨 **Configuration douteuse** : Pratiques non sécurisées
+   - 🚨 **Absence de documentation** : Comportement imprévisible
+
    ```bash
-   docker pull nginx:latest
+   # ✅ RECOMMANDÉ : Images officielles
+   docker pull nginx:1.24-alpine        # Version spécifique + distribution légère
+   docker pull mysql:8.0                # Version majeure stable
+   docker pull redis:7-alpine           # Version + optimisation
+   
+   # ❌ À ÉVITER : Images non officielles ou suspectes
+   docker pull randomuser/nginx-custom   # Provenance inconnue
+   docker pull sketchy/mysql-hack        # Nom suspect
+   ```
+
+   #### **🏷️ Gestion des tags : éviter `:latest`**
+
+   **Problèmes du tag `:latest`** :
+   - 🚨 **Instabilité** : Changements non maîtrisés entre déploiements
+   - 🚨 **Breaking changes** : Nouvelles versions incompatibles
+   - 🚨 **Debugging difficile** : Version utilisée non traçable
+   - 🚨 **Déploiements non reproductibles** : Résultats différents selon la date
+
+   **Stratégies de versioning recommandées** :
+
+   ```bash
+   # ✅ EXCELLENT : Version complète (recommandé en production)
+   docker pull nginx:1.24.0-alpine
+   docker pull mysql:8.0.35
+   
+   # ✅ BON : Version majeure.mineure (acceptable)
+   docker pull nginx:1.24-alpine
+   docker pull mysql:8.0
+   
+   # ⚠️ ACCEPTABLE : Version majeure (développement/test)
+   docker pull nginx:1-alpine
+   docker pull mysql:8
+   
+   # ❌ À ÉVITER : Tags flottants
+   docker pull nginx:latest             # Version non maîtrisée
+   docker pull nginx:mainline           # Branche de développement
+   docker pull nginx:edge               # Version expérimentale
+   ```
+
+   #### **🔍 Vérification des images avant utilisation**
+
+   1. **Vérifier la provenance sur Docker Hub**
+      ```bash
+      # Rechercher l'image officielle
+      docker search nginx
+      # Vérifier le statut "OFFICIAL" dans les résultats
+      ```
+
+   2. **Analyser les vulnérabilités**
+      ```bash
+      # Docker Scout (outil intégré)
+      docker scout quickview nginx:1.24.0-alpine
+      
+      # Alternative avec Trivy
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+        aquasec/trivy:latest image nginx:1.24.0-alpine
+      ```
+
+   3. **Examiner l'historique et les layers**
+      ```bash
+      # Voir l'historique de construction
+      docker history nginx:1.24.0-alpine
+      
+      # Inspecter la configuration
+      docker inspect nginx:1.24.0-alpine
+      ```
+
+   4. **Vérifier la signature (si disponible)**
+      ```bash
+      # Avec Docker Content Trust activé
+      export DOCKER_CONTENT_TRUST=1
+      docker pull nginx:1.24.0-alpine
+      ```
+
+   #### **📋 Exemple pour notre projet Guacamole**
+
+   ```bash
+   # ✅ Configuration recommandée pour la production
+   docker pull guacamole/guacd:1.5.4
+   docker pull guacamole/guacamole:1.5.4
+   docker pull mysql:8.0.35
+   
+   # ⚠️ Configuration de développement (acceptable pour ce TP)
+   docker pull guacamole/guacd:1.5
+   docker pull guacamole/guacamole:1.5
+   docker pull mysql:8.0
+   ```
+
+   #### **🛠️ Automatisation des mises à jour sécurisées**
+
+   1. **Utiliser Dependabot ou Renovate** pour les mises à jour automatiques
+   2. **Tests automatisés** avant déploiement de nouvelles versions
+   3. **Politique de rétention** : garder plusieurs versions pour rollback
+   4. **Monitoring** des nouvelles vulnérabilités (CVE)
+
+   **Exemple de politique de mise à jour** :
+   ```yaml
+   # .github/dependabot.yml
+   version: 2
+   updates:
+     - package-ecosystem: "docker"
+       directory: "/"
+       schedule:
+         interval: "weekly"
+       target-branch: "develop"
    ```
 
 ### **Surveillance et logs**
