@@ -21,7 +21,7 @@ L'objectif de cette extension est d'apprendre à déployer un **bastion d'accès
 3. **Comprendre et installer Docker**
    - **Qu'est-ce que Docker ?** - Concepts de conteneurisation
    - **Avantages de Docker** pour le déploiement d'applications
-   - Installation de **Docker** et **Docker Compose** selon la documentation officielle
+   - Installation de **Docker** et **Docker Compose** selon la documentation officielle (https://docs.docker.com/engine/install/debian/)
    - Comprendre les **volumes**, **réseaux** et **services**
 
 4. **Comprendre et installer Apache Guacamole**
