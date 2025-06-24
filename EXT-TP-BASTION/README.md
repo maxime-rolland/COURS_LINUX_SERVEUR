@@ -18,7 +18,7 @@ L'objectif de cette extension est d'apprendre à déployer un **bastion d'accès
    - Appliquer la **configuration réseau** adaptée
    - Utiliser la **documentation existante** du cours principal
 
-3. **Comprendre et installer Docker**
+3. **[Comprendre et installer Docker](03%20-%20Comprendre%20et%20installer%20Docker.md)**
    - **Qu'est-ce que Docker ?** - Concepts de conteneurisation
    - **Avantages de Docker** pour le déploiement d'applications
    - Installation de **Docker** et **Docker Compose** selon la documentation officielle (https://docs.docker.com/engine/install/debian/)
