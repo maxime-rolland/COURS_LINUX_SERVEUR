@@ -441,45 +441,20 @@ docker system df
 ### **Sécurisation de base**
 
 1. **Ne pas exécuter de conteneurs en tant que root**
-    ```bash
-    # Dans un Dockerfile
-    USER 1000:1000
-    ```
+   ```bash
+   # Dans un Dockerfile
+   USER 1000:1000
+   ```
 
 2. **Limiter les ressources**
-    ```bash
-    docker run --memory=512m --cpus=1 <image>
-    ```
+   ```bash
+   docker run --memory=512m --cpus=1 <image>
+   ```
 
 3. **Utiliser des images officielles et à jour**
-    ```bash
-    docker pull nginx:latest
-    ```
-
----
-
-### **Attention aux images non fiables et à l’utilisation de `:latest`**
-
-L’utilisation d’**images non vérifiées** (provenant de sources inconnues ou même de l’officiel sans vérification) présente des risques majeurs :
-
-- **Logiciels malveillants** : Une image peut contenir des backdoors, des scripts malicieux ou des failles intentionnelles.
-- **Fuites de données** : Des images compromises peuvent exfiltrer des secrets, des variables d’environnement ou des fichiers sensibles.
-- **Non-conformité** : Certaines images peuvent embarquer des logiciels non conformes à vos politiques de sécurité ou de licences.
-
-Même sur Docker Hub, privilégiez les images **officielles** (avec le badge « Official ») et vérifiez leur provenance et leur Dockerfile.
-
-#### **Risques liés à l’utilisation du tag `:latest`**
-
-- **Imprévisibilité** : Le tag `:latest` ne garantit pas une version précise. Une mise à jour de l’image peut introduire des changements majeurs ou des incompatibilités sans avertissement.
-- **Ruptures de compatibilité** : Une nouvelle version poussée sous `:latest` peut casser votre application ou modifier son comportement.
-- **Difficulté de debug** : Il devient difficile de reproduire un environnement ou de diagnostiquer un problème si l’image change silencieusement.
-
-**Bonnes pratiques :**
-- Utilisez des tags de version explicites (`nginx:1.25.3` plutôt que `nginx:latest`).
-- Vérifiez et mettez à jour régulièrement vos images, mais contrôlez le moment et la version.
-- Scannez les images avec des outils de sécurité (ex : `docker scan`, Trivy).
-
----
+   ```bash
+   docker pull nginx:latest
+   ```
 
 ### **Surveillance et logs**
 
