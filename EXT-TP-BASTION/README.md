@@ -33,7 +33,6 @@ L'objectif de cette extension est d'apprendre à déployer un **bastion d'accès
 **Conseils pour cette extension :**
 
 - Appliquez les **bonnes pratiques de sécurité** apprises dans le cours principal
-- Documentez chaque étape et prenez des **captures d'écran**
 - Testez méthodiquement chaque service avant de passer à l'étape suivante
 - Utilisez les **logs Docker** pour diagnostiquer les problèmes
 
@@ -192,28 +191,44 @@ services:
    cd guacamole-bastion
    ```
 
-2. **Créer le fichier docker-compose.yml** (voir section précédente)
+2. **Générer le script d'initialisation de la base de données**
+   ```bash
+   docker run --rm guacamole/guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql
+   ```
+   > Cette commande génère le fichier `initdb.sql` contenant la structure de base de données nécessaire à Guacamole
 
-3. **Démarrer les conteneurs**
+3. **Créer le fichier docker-compose.yml** (voir section précédente)
+
+4. **Démarrer les conteneurs**
    ```bash
    docker compose up -d
    ```
 
-4. **Vérifier le déploiement**
+5. **Initialiser la base de données MySQL**
+   ```bash
+   # Attendre que MySQL soit complètement démarré
+   docker compose logs db
+   
+   # Exécuter le script d'initialisation dans le conteneur MySQL
+   docker compose exec db mysql -u user -p Azerty01 guacamoledb < initdb.sql
+   ```
+   > Cette étape importe la structure de base de données générée précédemment dans le conteneur MySQL
+
+6. **Vérifier le déploiement**
    ```bash
    docker compose ps
    docker compose logs guacamole
    ```
 
-5. **Accéder à l'interface** : `http://localhost:8080/guacamole`
+7. **Accéder à l'interface** : `http://localhost:8080/guacamole`
    - Login par défaut : `guacadmin`
    - Mot de passe par défaut : `guacadmin`
 
-6. **Ajouter une connexion RDP** vers la VM Windows
+8. **Ajouter une connexion RDP** vers la VM Windows
 
-7. **Tester une session** et vérifier les enregistrements dans `./records`
+9. **Tester une session** et vérifier les enregistrements dans `./records`
 
-8. **Bonus** : Mettre en place un reverse proxy HTTPS
+10. **Bonus** : Mettre en place un reverse proxy HTTPS
 
 ---
 
