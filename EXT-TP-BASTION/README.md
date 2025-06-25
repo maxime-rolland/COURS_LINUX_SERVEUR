@@ -446,6 +446,7 @@ nftables fonction avec 2 tables et 2 chaines dans cet exemple.
 
 ```bash
 sudo nano /etc/nftables.conf
+
 table ip nat {
     chain prerouting {
         type nat hook prerouting priority -100;
