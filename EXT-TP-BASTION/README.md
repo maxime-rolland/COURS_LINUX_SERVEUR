@@ -404,33 +404,37 @@ Voici l'objectif de cette configuration :
                                           |
                                           | Requête vers IP publique:8080
                                           v
-                            +-------------+--------------+
+                            +-------------+--------------+ 
                             |   Routeur avec NAT (DNAT)  |
                             | IP Publique : 203.0.113.10 |
                             | DNAT : 203.0.113.10:8080 → |
-                            |        192.168.200.101:8080|
+                            |        192.168.1.100:8080  |
                             +-------------+--------------+
-                                          |
-                                          | Paquet redirigé (DNAT appliqué)
-                                          v
-                         +----------------+------------------+
-                         |     Bastion Guacamole (LAN)       |
-                         | IP : 192.168.200.101              |
-                         | Accès Web sur port 8080           |
-                         +--------+---------------+----------+
-                                  |               |
-                                Accès via RDP/VNC/SSH
-                                  |               |
-               +------------------+               +-------------------+
-               |                                                      |
-+--------------v---------------+                        +-------------v---------------+
-|       Serveur Interne 1      |                        |      Serveur Interne 2      |
-| IP : 192.168.200.*           |                        | IP : 192.168.200.*<         |
-+------------------------------+                        +-----------------------------+
+                              |              |             
+          +-------------------+              +-------------------+
+          |                                                      |
++---------v---------+                                +-----------v-----------+
+|   Client LAN      |                                |     Bastion Guacamole  |
+| IP : 192.168.130.*|                                | IP : 192.168.1.100     |
++---------+---------+                                | Accès Web port 8080    |
+          |                                          +-------+---------------+
+          |                                                  |
+          | HTTP/HTTPS                                        | Accès via RDP/VNC/SSH
+          |                                                  |
+          |                                  +---------------+-------------------+
+          |                                  |                                   |
+          |                      +-----------v-----------+          +------------v------------+
+          |                      |     Serveur Interne 2  |          |    Serveur Interne 1     |
+          |                      |     IP : 192.168.200.* |          |    IP : 192.168.200.*   |
+          |                      +------------------------+          +-------------------------+
+          |                                  |
+          +---------------------------------+|
+                     Accès HTTP/HTTPS direct
+
 
 Résumé du flux :
 1. Le client externe contacte 203.0.113.10:8080.
-2. Le routeur applique une règle DNAT et redirige vers 192.168.200.101:8080 (Guacamole).
+2. Le routeur applique une règle DNAT et redirige vers 192.168.1.100:8080 (Guacamole).
 3. Le bastion affiche l'interface web de Guacamole.
 4. L'utilisateur se connecte ensuite à un des serveurs via le bastion.
 ```
@@ -452,7 +456,7 @@ table ip nat {
         type nat hook prerouting priority -100;
         # Toutes les requètes TCP sur le port 8080 qui arrivent sur l'interface
         # "ens33" sont redirigées vers le bastion guacamole
-        iif "ens33" tcp dport 8080 dnat to 192.168.200.101:8080
+        iif "ens33" tcp dport 8080 dnat to 192.168.1.100:8080
     }
 
     chain postrouting {
@@ -465,20 +469,20 @@ table ip nat {
 table ip filter {
     chain input {
         type filter hook input priority 0;
-        # Politique de sécurité, tout ce qui n'est pas autorisé est drop
         policy drop;
 
         iif "lo" accept
         # Accepte les paquets liés à des connexions déjà établies (utile pour laisser passer le trafic de retour)
         ct state established,related accept
         ip protocol icmp accept
-        # Autorise le port SSH sur le serveur/routeur
+        # Autorise le port SSH sur le routeur
         tcp dport 22 accept
-        # Autorise les ports DNS sur le serveur/routeur
+        # Autorise les ports DNS
         tcp dport 53 accept
         udp dport 53 accept
-        # Autorise le port DHCP pour la distribution des adresses IP
+        # Autorise le port DHCP pour la distribution des adresses
         udp dport 67 accept
+        udp dport 68 accept
     }
 
     chain forward {
@@ -487,14 +491,22 @@ table ip filter {
         policy drop;
 
         ct state established,related accept
-        # Autorise les accès depuis l'exterieur sur l'ip publique
-        iif "ens33" ip saddr 0.0.0.0/0 ip daddr 192.168.200.101 tcp dport 8080 accept
+        # Autorise le serveur DNS à sortir
+        ip saddr 192.168.200.254 ip saddr 0.0.0.0/0 tcp dport 53 accept
+        # Autorise les accès depuis l'exterieur sur le bastion
+        iif "ens33" ip saddr 0.0.0.0/0 ip daddr 192.168.1.100 tcp dport 8080 accept
+        # Autorise le VLAN du bastion à accéder à accèder en SSH et RDP aux serveurs
+        ip saddr 192.168.1.0/24 ip daddr 192.168.200.0/24 tcp dport {22, 3389} accept
         # Autorise l'accès au sous réseau au WEB par les ports HTTP, HTTPS
-        ip saddr 192.168.200.0/24 tcp dport {80, 443} accept
+        ip saddr 192.168.0.0/16 tcp dport {80, 443} accept
         # Redirige les requêtes DNS vers le serveur DNS
-        ip saddr 192.168.200.0/24 ip daddr 192.168.200.254 tcp dport 53 accept
-        ip saddr 192.168.200.0/24 ip daddr 192.168.200.254 udp dport 53 accept
-
+        ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 tcp dport 53 accept
+        ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 udp dport 53 accept
+        #Autorise les requêtes DHCP vers le serveur DHCP
+        ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 tcp dport {67, 68} accept
+        ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 udp dport {67, 68} accept
+        # Autorise les clients du VLAN bureautique d'accéder au serveur LAMP (Server2)
+        ip saddr 192.168.200.0/24 ip daddr 192.168.200.200 tcp dport {80, 443}
     }
 }
 ```
