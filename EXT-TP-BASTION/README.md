@@ -327,27 +327,7 @@ services:
    docker compose logs guacamole | grep -i totp
    ```
 
-   c) **Configuration utilisateur**
-
-   1. **Connexion initiale** : Se connecter avec `guacadmin` / `guacadmin`
-
-   2. **Accès aux paramètres** :
-      - Cliquer sur le nom d'utilisateur (en haut à droite)
-      - Sélectionner **"Paramètres"**
-      - Aller dans l'onglet **"Préférences"**
-
-   3. **Configuration TOTP** :
-      - Section **"TOTP (Authenticator)"**
-      - Cliquer sur **"Configurer l'authentificateur"**
-      - Un **QR Code** s'affiche avec la clé secrète
-
-   4. **Configuration de l'application mobile** :
-      - Ouvrir Google Authenticator (ou équivalent)
-      - Scanner le QR Code ou saisir manuellement la clé
-      - Saisir le code à 6 chiffres généré pour validation
-      - Cliquer sur **"Confirmer"**
-
-   d) **Première connexion avec TOTP**
+   c) **Première connexion avec TOTP**
 
    Lors de la prochaine connexion :
    1. Saisir nom d'utilisateur et mot de passe
