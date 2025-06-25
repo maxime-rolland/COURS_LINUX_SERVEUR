@@ -437,12 +437,12 @@ Résumé du flux :
 A l'aide du fichier nftables.conf il est possible de router le **port 8080** de notre container Guacamole afin de pouvoir y accèder depuis l'extérieur.
 Pour ce faire utilisez la configuration suivante:
 nftables fonction avec 2 tables et 2 chaines dans cet exemple.
-**Dans la table ip nat**
-   -La chaine prerouting :  Intervient à l’arrivée du paquet, avant le routage ; utilisée pour DNAT (Destination NAT).
-   -La chaine postrouting : Intervient juste avant que le paquet sorte, après le routage ; utilisée pour SNAT (Source NAT).
-**Dans la table ip table**
-   -La chaine input: Concerne les paquets destinés à la machine locale (pare-feu pour le serveur/routeur).
-   -La chaine forward: Concerne les paquets routés/transitant par la machine (pare-feu entre interfaces réseau).
+- **Dans la table ip nat:**
+   - **La chaine prerouting** :  Intervient à l’arrivée du paquet, avant le routage ; utilisée pour DNAT (Destination NAT).
+   - **La chaine postrouting** : Intervient juste avant que le paquet sorte, après le routage ; utilisée pour SNAT (Source NAT).
+- **Dans la table ip table:**
+   - **La chaine input**: Concerne les paquets destinés à la machine locale (pare-feu pour le serveur/routeur).
+   - **La chaine forward**: Concerne les paquets routés/transitant par la machine (pare-feu entre interfaces réseau).
 
 ```bash
 sudo nano /etc/nftables.conf
