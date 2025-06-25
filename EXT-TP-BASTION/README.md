@@ -433,14 +433,14 @@ Résumé du flux :
 2. Le routeur applique une règle DNAT et redirige vers 192.168.200.101:8080 (Guacamole).
 3. Le bastion affiche l'interface web de Guacamole.
 4. L'utilisateur se connecte ensuite à un des serveurs via le bastion.
-
+```
 A l'aide du fichier nftables.conf il est possible de router le **port 8080** de notre container Guacamole afin de pouvoir y accèder depuis l'extérieur.
 Pour ce faire utilisez la configuration suivante:
 nftables fonction avec 2 tables et 2 chaines dans cet exemple.
-*Dans la table ip nat*
+**Dans la table ip nat**
    -La chaine prerouting :  Intervient à l’arrivée du paquet, avant le routage ; utilisée pour DNAT (Destination NAT).
    -La chaine postrouting : Intervient juste avant que le paquet sorte, après le routage ; utilisée pour SNAT (Source NAT).
-*Dans la table ip table*
+**Dans la table ip table**
    -La chaine input: Concerne les paquets destinés à la machine locale (pare-feu pour le serveur/routeur).
    -La chaine forward: Concerne les paquets routés/transitant par la machine (pare-feu entre interfaces réseau).
 
@@ -496,6 +496,7 @@ table ip filter {
 
     }
 }
+```
 
 ## 🔐 Sécurisation obligatoire
 
