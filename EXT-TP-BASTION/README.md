@@ -207,6 +207,7 @@ services:
       - **Port** : `PORT_SI_DIFERENT` (port par défaut RDP : 3389)
       - **Nom d'utilisateur** : Utilisateur Windows de votre VM
       - **Mot de passe** : Mot de passe de l'utilisateur Windows
+      - **Ignorer le certificat du serveur** : Coché
       - **Domaine** : Laisser vide (sauf si VM jointe à un domaine)   d) **Paramètres d'affichage (optionnel)**
       - **Résolution** : `1920x1080` ou selon votre préférence
       - **Profondeur de couleur** : `True color (32-bit)` pour la meilleure qualité
