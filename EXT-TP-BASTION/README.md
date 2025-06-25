@@ -223,8 +223,7 @@ services:
       > - **Raccourcis clavier non reconnus** : Certains raccourcis peuvent être interceptés par le navigateur
 
    f) **Paramètres d'enregistrement (pour l'audit)**
-      - **Chemin d'enregistrement** : Laisser par défaut
-      - **Nom d'enregistrement** : `${HISTORY_PATH}/${HISTORY_UUID}`
+      - **Chemin d'enregistrement** : `${HISTORY_PATH}/${HISTORY_UUID}`
       - **Créer un répertoire d'enregistrement** : Coché
       - **Exclure la souris** : Selon préférence
 
