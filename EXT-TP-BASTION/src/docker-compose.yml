@@ -20,6 +20,7 @@ services:
       MYSQL_DATABASE: guacamoledb
       MYSQL_USER: user
       MYSQL_PASSWORD: Azerty01
+      TOTP_ENABLED: "true"
     ports:
       - 8080:8080
     volumes:

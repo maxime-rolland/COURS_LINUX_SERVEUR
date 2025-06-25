@@ -253,6 +253,164 @@ services:
 
 9. **Tester une session** et vérifier les enregistrements dans `./records`
 
+10. **Mettre en œuvre l'authentification TOTP (2FA)**
+
+   #### 🔐 Qu'est-ce que l'authentification à deux facteurs (2FA) ?
+
+   L'**authentification à deux facteurs** (2FA - Two-Factor Authentication) renforce la sécurité en combinant :
+   - **Quelque chose que vous connaissez** : mot de passe (facteur de connaissance)
+   - **Quelque chose que vous possédez** : téléphone/token (facteur de possession)
+
+   **Avantages de la 2FA :**
+   - ✅ **Protection contre le vol de mots de passe** : Un mot de passe compromis seul ne suffit plus
+   - ✅ **Réduction des attaques par force brute** : Code temporaire requis en plus
+   - ✅ **Conformité réglementaire** : Exigence de nombreux standards (PCI-DSS, ANSSI, etc.)
+   - ✅ **Traçabilité renforcée** : Logs d'authentification plus détaillés
+
+   #### ⏰ Le protocole TOTP (Time-based One-Time Password)
+
+   **TOTP** est un algorithme standardisé (**RFC 6238**) qui génère des codes à usage unique basés sur le temps :
+
+   **Principe de fonctionnement :**
+   1. **Secret partagé** : Une clé secrète est partagée entre le serveur et l'application mobile
+   2. **Horodatage** : L'heure actuelle est utilisée comme base de calcul
+   3. **Algorithme HMAC** : Hash-based Message Authentication Code avec SHA-1
+   4. **Fenêtre temporelle** : Codes valides par intervalles (généralement 30 secondes)
+   5. **Code à 6 chiffres** : Résultat final affiché à l'utilisateur
+
+   **Formule TOTP :**
+   ```
+   TOTP = HOTP(Secret, T)
+   où T = floor((temps_unix - T0) / X)
+   - T0 = époque de départ (0)
+   - X = intervalle de temps (30 secondes)
+   ```
+
+   **Applications compatibles :**
+   - **Google Authenticator** (Android/iOS)
+   - **Microsoft Authenticator** (Android/iOS)
+   - **Authy** (multi-plateforme)
+   - **FreeOTP** (open source)
+   - **1Password** (gestionnaire de mots de passe)
+
+   #### 🛡️ Implémentation TOTP dans Guacamole
+
+   Guacamole supporte nativement l'extension TOTP pour sécuriser l'accès au bastion :
+
+   a) **Configuration du docker-compose.yml**
+
+   Ajouter la variable d'environnement dans le service `guacamole` :
+
+   ```yaml
+   guacamole:
+     image: guacamole/guacamole
+     restart: always
+     environment:
+       # ...existing code...
+       TOTP_ENABLED: 'true'  # Active l'extension TOTP
+       TOTP_ISSUER: 'Bastion-Guacamole'  # Nom affiché dans l'app (optionnel)
+       TOTP_DIGITS: '6'  # Nombre de chiffres du code (optionnel, défaut: 6)
+       TOTP_PERIOD: '30'  # Durée de validité en secondes (optionnel, défaut: 30)
+   ```
+
+   b) **Redémarrage du service**
+
+   ```bash
+   # Arrêter le service Guacamole
+   docker compose stop guacamole
+   
+   # Redémarrer avec la nouvelle configuration
+   docker compose up -d guacamole
+   
+   # Vérifier que l'extension est active
+   docker compose logs guacamole | grep -i totp
+   ```
+
+   c) **Configuration utilisateur**
+
+   1. **Connexion initiale** : Se connecter avec `guacadmin` / `guacadmin`
+
+   2. **Accès aux paramètres** :
+      - Cliquer sur le nom d'utilisateur (en haut à droite)
+      - Sélectionner **"Paramètres"**
+      - Aller dans l'onglet **"Préférences"**
+
+   3. **Configuration TOTP** :
+      - Section **"TOTP (Authenticator)"**
+      - Cliquer sur **"Configurer l'authentificateur"**
+      - Un **QR Code** s'affiche avec la clé secrète
+
+   4. **Configuration de l'application mobile** :
+      - Ouvrir Google Authenticator (ou équivalent)
+      - Scanner le QR Code ou saisir manuellement la clé
+      - Saisir le code à 6 chiffres généré pour validation
+      - Cliquer sur **"Confirmer"**
+
+   d) **Première connexion avec TOTP**
+
+   Lors de la prochaine connexion :
+   1. Saisir nom d'utilisateur et mot de passe
+   2. Un **champ supplémentaire** "Code d'authentification" apparaît
+   3. Ouvrir l'application mobile et saisir le code actuel
+   4. Cliquer sur "Se connecter"
+
+   #### 🔧 Dépannage et bonnes pratiques
+
+   **Problèmes courants :**
+   - **"Code invalide"** : Vérifier l'heure système du serveur (synchronisation NTP)
+   - **QR Code illisible** : Utiliser la clé secrète textuelle
+   - **Perte du téléphone** : Prévoir des codes de récupération (backup codes)
+
+   **Commandes de diagnostic :**
+   ```bash
+   # Vérifier l'heure système
+   date
+   timedatectl status
+   
+   # Synchroniser l'heure si nécessaire
+   sudo ntpdate -s time.nist.gov
+   
+   # Vérifier les logs TOTP
+   docker compose logs guacamole | grep -i totp
+   ```
+
+   **Sécurisation avancée :**
+   - **Codes de récupération** : Générer et stocker en lieu sûr
+   - **Gestion multi-utilisateurs** : Chaque utilisateur configure son propre TOTP
+   - **Politique d'entreprise** : Rendre le TOTP obligatoire pour tous les comptes
+   - **Audit** : Surveiller les échecs d'authentification TOTP
+
+   #### 📋 Exemple de configuration complète
+
+   ```yaml
+   # docker-compose.yml avec TOTP activé
+   services:
+     guacamole:
+       image: guacamole/guacamole
+       restart: always
+       environment:
+         GUACD_HOSTNAME: guacd
+         MYSQL_HOSTNAME: db
+         MYSQL_DATABASE: guacamoledb
+         MYSQL_USER: user
+         MYSQL_PASSWORD: Azerty01
+         TOTP_ENABLED: 'true'
+         TOTP_ISSUER: 'Bastion-Entreprise'
+         RECORDING_SEARCH_PATH: /var/lib/guacamole/recordings
+         HISTORY_PATH: /var/lib/guacamole/recordings
+       ports:
+         - 8080:8080
+       volumes:
+         - ./records:/var/lib/guacamole/recordings
+   ```
+
+   > 🚨 **Important pour la production** :
+   > - Activer TOTP **avant** la mise en production
+   > - Former les utilisateurs à l'utilisation des applications d'authentification
+   > - Prévoir une procédure de récupération en cas de perte d'accès
+   > - Synchroniser l'horloge système (NTP) pour éviter les décalages temporels
+
+   
 ---
 
 ## 🔐 Sécurisation obligatoire
