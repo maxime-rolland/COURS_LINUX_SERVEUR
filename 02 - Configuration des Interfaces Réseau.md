@@ -81,7 +81,7 @@
      ```bash
      auto enp0s3
      iface enp0s3 inet static
-         address 192.168.200.200
+         address 192.168.200.2
          netmask 255.255.255.0
          gateway 192.168.200.254
      ```
@@ -123,7 +123,7 @@
 
      ```cmd
      ping 192.168.200.254
-     ping 192.168.200.200
+     ping 192.168.200.2
      ```
 
    Si les pings réussissent, la connectivité est en place.
