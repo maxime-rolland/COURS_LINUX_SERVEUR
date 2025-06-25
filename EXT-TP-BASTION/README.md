@@ -317,7 +317,7 @@ services:
 
    ```bash
    # Arrêter le service Guacamole
-   docker compose stop guacamole
+   docker compose down guacamole
    
    # Redémarrer avec la nouvelle configuration
    docker compose up -d guacamole
