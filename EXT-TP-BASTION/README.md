@@ -392,6 +392,110 @@ services:
 
    
 ---
+## Redirection de port pour accès distant et renforcement des accès:
+
+Voici l'objectif de cette configuration :
+
+```text
+                                +---------------------+
+                                |   Client Externe    |
+                                | IP : x.x.x.x        |
+                                +---------+-----------+
+                                          |
+                                          | Requête vers IP publique:8080
+                                          v
+                            +-------------+--------------+
+                            |   Routeur avec NAT (DNAT)  |
+                            | IP Publique : 203.0.113.10 |
+                            | DNAT : 203.0.113.10:8080 → |
+                            |        192.168.200.101:8080|
+                            +-------------+--------------+
+                                          |
+                                          | Paquet redirigé (DNAT appliqué)
+                                          v
+                         +----------------+------------------+
+                         |     Bastion Guacamole (LAN)       |
+                         | IP : 192.168.200.101              |
+                         | Accès Web sur port 8080           |
+                         +--------+---------------+----------+
+                                  |               |
+                                Accès via RDP/VNC/SSH
+                                  |               |
+               +------------------+               +-------------------+
+               |                                                      |
++--------------v---------------+                        +-------------v--------------+
+|       Serveur Interne 1      |                        |      Serveur Interne 2      |
+| IP : 192.168.1.20            |                        | IP : 192.168.1.21           |
++-----------------------------+                        +-----------------------------+
+
+Résumé du flux :
+1. Le client externe contacte 203.0.113.10:8080.
+2. Le routeur applique une règle DNAT et redirige vers 192.168.200.101:8080 (Guacamole).
+3. Le bastion affiche l'interface web de Guacamole.
+4. L'utilisateur se connecte ensuite à un des serveurs via le bastion.
+
+A l'aide du fichier nftables.conf il est possible de router le **port 8080** de notre container Guacamole afin de pouvoir y accèder depuis l'extérieur.
+Pour ce faire utilisez la configuration suivante:
+nftables fonction avec 2 tables et 2 chaines dans cet exemple.
+*Dans la table ip nat*
+   -La chaine prerouting :  Intervient à l’arrivée du paquet, avant le routage ; utilisée pour DNAT (Destination NAT).
+   -La chaine postrouting : Intervient juste avant que le paquet sorte, après le routage ; utilisée pour SNAT (Source NAT).
+*Dans la table ip table*
+   -La chaine input: Concerne les paquets destinés à la machine locale (pare-feu pour le serveur/routeur).
+   -La chaine forward: Concerne les paquets routés/transitant par la machine (pare-feu entre interfaces réseau).
+
+```bash
+sudo nano /etc/nftables.conf
+table ip nat {
+    chain prerouting {
+        type nat hook prerouting priority -100;
+        # Toutes les requètes TCP sur le port 8080 qui arrivent sur l'interface
+        # "ens33" sont redirigées vers le bastion guacamole
+        iif "ens33" tcp dport 8080 dnat to 192.168.200.101:8080
+    }
+
+    chain postrouting {
+        type nat hook postrouting priority 100;
+        # Interface de routage NAT
+        oifname "ens33" masquerade
+    }
+}
+
+table ip filter {
+    chain input {
+        type filter hook input priority 0;
+        # Politique de sécurité, tout ce qui n'est pas autorisé est drop
+        policy drop;
+
+        iif "lo" accept
+        # Accepte les paquets liés à des connexions déjà établies (utile pour laisser passer le trafic de retour)
+        ct state established,related accept
+        ip protocol icmp accept
+        # Autorise le port SSH sur le serveur/routeur
+        tcp dport 22 accept
+        # Autorise les ports DNS sur le serveur/routeur
+        tcp dport 53 accept
+        udp dport 53 accept
+        # Autorise le port DHCP pour la distribution des adresses IP
+        udp dport 67 accept
+    }
+
+    chain forward {
+        type filter hook forward priority 0;
+        # Politique de sécurité, tout ce qui n'est pas autorisé est drop
+        policy drop;
+
+        ct state established,related accept
+        # Autorise les accès depuis l'exterieur sur l'ip publique
+        iif "ens33" ip saddr 0.0.0.0/0 ip daddr 192.168.200.101 tcp dport 8080 accept
+        # Autorise l'accès au sous réseau au WEB par les ports HTTP, HTTPS
+        ip saddr 192.168.200.0/24 tcp dport {80, 443} accept
+        # Redirige les requêtes DNS vers le serveur DNS
+        ip saddr 192.168.200.0/24 ip daddr 192.168.200.254 tcp dport 53 accept
+        ip saddr 192.168.200.0/24 ip daddr 192.168.200.254 udp dport 53 accept
+
+    }
+}
 
 ## 🔐 Sécurisation obligatoire
 
