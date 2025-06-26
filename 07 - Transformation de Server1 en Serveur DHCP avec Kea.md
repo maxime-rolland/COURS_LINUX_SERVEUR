@@ -28,9 +28,9 @@ Le processus DHCP suit une séquence d'échanges entre le client et le serveur, 
 ```mermaid
 sequenceDiagram
     Client-->>Serveur DHCP: DHCPDISCOVER (broadcast)
-    Serveur DHCP-->>Client: DHCPOFFER (broadcast)
+    Serveur DHCP-->>Client: DHCPOFFER (unicast)
     Client-->>Serveur DHCP: DHCPREQUEST (broadcast)
-    Serveur DHCP-->>Client: DHCPACK (broadcast)
+    Serveur DHCP-->>Client: DHCPACK (unicast)
     
 ```
 
