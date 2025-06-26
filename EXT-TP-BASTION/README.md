@@ -413,20 +413,20 @@ Voici l'objectif de cette configuration :
                               |              |             
           +-------------------+              +-------------------+
           |                                                      |
-+---------v---------+                                +-----------v-----------+
++---------v---------+                                +-----------v------------+
 |   Client LAN      |                                |     Bastion Guacamole  |
 | IP : 192.168.130.*|                                | IP : 192.168.1.100     |
 +---------+---------+                                | Accès Web port 8080    |
-          |                                          +-------+---------------+
+          |                                          +-------+----------------+
           |                                                  |
-          | HTTP/HTTPS                                        | Accès via RDP/VNC/SSH
+          | HTTP/HTTPS                                       | Accès via RDP/VNC/SSH
           |                                                  |
           |                                  +---------------+-------------------+
           |                                  |                                   |
-          |                      +-----------v-----------+          +------------v------------+
-          |                      |     Serveur Interne 2  |          |    Serveur Interne 1     |
-          |                      |     IP : 192.168.200.* |          |    IP : 192.168.200.*   |
-          |                      +------------------------+          +-------------------------+
+          |                      +-----------v------------+         +------------v------------+
+          |                      |     Serveur Interne 2  |         |    Serveur Interne 1    |
+          |                      |     IP : 192.168.200.* |         |    IP : 192.168.200.*   |
+          |                      +------------------------+         +-------------------------+
           |                                  |
           +---------------------------------+|
                      Accès HTTP/HTTPS direct
@@ -436,11 +436,17 @@ Résumé du flux :
 1. Le client externe contacte 203.0.113.10:8080.
 2. Le routeur applique une règle DNAT et redirige vers 192.168.1.100:8080 (Guacamole).
 3. Le bastion affiche l'interface web de Guacamole.
-4. L'utilisateur se connecte ensuite à un des serveurs via le bastion.
+4. L'utilisateur externe se connecte ensuite à un des serveurs via le bastion.
+5. Le client présent dans le sous réseau du LAN bureautique accède aux sites du serveur 2 en HTTP.
 ```
-A l'aide du fichier nftables.conf il est possible de router le **port 8080** de notre container Guacamole afin de pouvoir y accèder depuis l'extérieur.
-Pour ce faire utilisez la configuration suivante:
-nftables fonction avec 2 tables et 2 chaines dans cet exemple.
+# Configuration réseau pour cet exemple :
+- Un sous réseau en 192.168.1.0 pour le bastion (DMZ)
+- Un sous réseau en 192.168.200.0 pour les serveurs
+- Un sous réseau en 192.168.130.0 pour les postes clients.
+
+A l'aide du fichier nftables.conf il est possible de router le **port 8080** de notre container Guacamole afin de pouvoir y accèder depuis l'extérieur (DMZ). Cette configuration ajoute une réelle gestion des flux et permet d'accroître la sécurité des accès. Tout ce qui n'est pas autorisé dans la table est drop.
+
+nftables fonctionne avec 2 tables et 2 chaines dans cet exemple.
 - **Dans la table ip nat:**
    - **La chaine prerouting** :  Intervient à l’arrivée du paquet, avant le routage ; utilisée pour DNAT (Destination NAT).
    - **La chaine postrouting** : Intervient juste avant que le paquet sorte, après le routage ; utilisée pour SNAT (Source NAT).
@@ -474,6 +480,7 @@ table ip filter {
         iif "lo" accept
         # Accepte les paquets liés à des connexions déjà établies (utile pour laisser passer le trafic de retour)
         ct state established,related accept
+        # Autorise le ping
         ip protocol icmp accept
         # Autorise le port SSH sur le routeur
         tcp dport 22 accept
@@ -482,7 +489,6 @@ table ip filter {
         udp dport 53 accept
         # Autorise le port DHCP pour la distribution des adresses
         udp dport 67 accept
-        udp dport 68 accept
     }
 
     chain forward {
@@ -491,7 +497,7 @@ table ip filter {
         policy drop;
 
         ct state established,related accept
-        # Autorise le serveur DNS à sortir
+        # Autorise le serveur DNS à sortir vers d'autres DNS
         ip saddr 192.168.200.254 ip saddr 0.0.0.0/0 tcp dport 53 accept
         # Autorise les accès depuis l'exterieur sur le bastion
         iif "ens33" ip saddr 0.0.0.0/0 ip daddr 192.168.1.100 tcp dport 8080 accept
@@ -506,7 +512,7 @@ table ip filter {
         ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 tcp dport {67, 68} accept
         ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 udp dport {67, 68} accept
         # Autorise les clients du VLAN bureautique d'accéder au serveur LAMP (Server2)
-        ip saddr 192.168.200.0/24 ip daddr 192.168.200.200 tcp dport {80, 443}
+        ip saddr 192.168.130.0/24 ip daddr 192.168.200.200 tcp dport {80, 443}
     }
 }
 ```
