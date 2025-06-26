@@ -34,6 +34,8 @@ sequenceDiagram
     
 ```
 
+On notera que le message **DHCPREQUEST** est également envoyé en broadcast. Cela permet à tous les serveurs DHCP de savoir que le client a accepté une offre spécifique, et cela permet également aux autres serveurs de libérer l'adresse IP qu'ils auraient pu proposer.
+
 ### **Rôles du Serveur et du Client DHCP**
 
 - **Serveur DHCP :**
