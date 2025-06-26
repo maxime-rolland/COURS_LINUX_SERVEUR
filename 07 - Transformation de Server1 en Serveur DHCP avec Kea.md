@@ -274,6 +274,104 @@ zone "200.168.192.in-addr.arpa" IN {
 };
 ```
 
+**Fonctionnement de la communication entre Kea et Bind9 :**
+
+### **Architecture de Communication DHCP-DNS Dynamique**
+
+La mise à jour DNS dynamique (DDNS) permet au serveur DHCP de mettre à jour automatiquement les enregistrements DNS lorsqu'un client obtient, renouvelle ou libère un bail DHCP. Voici comment Kea et BIND9 collaborent :
+
+```mermaid
+sequenceDiagram
+    participant Client as Client DHCP
+    participant Kea as Kea DHCP4
+    participant DDNS as Kea DHCP-DDNS
+    participant BIND as BIND9 DNS
+    
+    Client->>Kea: DHCPDISCOVER
+    Kea->>Client: DHCPOFFER
+    Client->>Kea: DHCPREQUEST
+    Kea->>Client: DHCPACK (IP attribuée)
+    
+    Note over Kea,DDNS: Communication via socket Unix
+    Kea->>DDNS: Demande de mise à jour DNS
+    DDNS->>DDNS: Prépare requête RFC 2136 signée TSIG
+    
+    Note over DDNS,BIND: Authentification TSIG
+    DDNS->>BIND: DNS UPDATE (enregistrement A + DHCID)
+    BIND->>BIND: Vérifie signature TSIG
+    BIND->>BIND: Met à jour zone directe
+    BIND->>DDNS: ACK mise à jour A
+    
+    DDNS->>BIND: DNS UPDATE (enregistrement PTR + DHCID)
+    BIND->>BIND: Met à jour zone inverse
+    BIND->>DDNS: ACK mise à jour PTR
+    
+    DDNS->>Kea: Confirmation mises à jour
+```
+
+### **Évolution Historique des Méthodes DDNS**
+
+#### **Les Trois Styles Historiques d'ISC DHCP**
+
+| **Style** | **État** | **Principe** | **Limites/Abandon** |
+|-----------|----------|--------------|---------------------|
+| `none` | Toujours accepté | Aucune mise à jour DNS - baux sans création/modification d'enregistrements | Pas de synchronisation DNS |
+| `standard` | **Obsolète** (depuis v4.2) | Mise à jour RFC 2136 directe : A/PTR + TXT d'identification basé sur hostname | Collisions possibles, pas de libération fiable |
+| `ad-hoc` | **Supprimé** | Variante expérimentale sans TXT, avec macros de nommage | Jamais stabilisée |
+| `interim` | **Seul supporté** (≥ 4.4) | Algorithme ISC avec DHCID (RFC 4701) liant DNS au client (DUID/MAC) | **Recommandé** |
+
+> ⚠️ **Important** : À partir de la version 4.4, `standard` et `ad-hoc` génèrent des warnings et sont automatiquement mappés vers `interim`.
+
+#### **Avantages de la Méthode `interim` (RFC 4701)**
+
+1. **Enregistrement DHCID** : Chaque entrée DNS contient un identifiant unique lié au client
+2. **Protection contre les collisions** : Impossible d'écraser l'enregistrement d'un autre client
+3. **Nettoyage sécurisé** : Suppression uniquement si le DHCID correspond
+4. **Gestion de la concurrence** : Plusieurs serveurs DHCP peuvent coexister
+
+### **Dépannage Courant DDNS**
+
+#### **Problèmes Fréquents**
+
+1. **Signatures TSIG invalides** :
+   ```bash
+   # Vérifier synchronisation temporelle
+   sudo ntpdate -s pool.ntp.org
+   
+   # Vérifier concordance des clés
+   grep secret /etc/bind/rndc.key
+   grep secret /etc/kea/kea-dhcp-ddns.conf
+   ```
+
+2. **Permissions insuffisantes** :
+   ```bash
+   # BIND doit pouvoir écrire dans les zones
+   sudo chown -R bind:bind /var/lib/bind/zones/
+   sudo chmod 644 /var/lib/bind/zones/db.*
+   ```
+
+3. **Communications inter-services** :
+   ```bash
+   # Vérifier socket Kea DHCP4 ↔ DHCP-DDNS
+   sudo netstat -unlp | grep 53001
+   
+   # Tester connectivité DNS
+   dig @127.0.0.1 SOA learn-it.local
+   ```
+
+### **TL;DR - Résumé Exécutif**
+
+✅ **Méthode recommandée** : Kea DHCP + DHCP-DDNS + BIND9 avec TSIG
+✅ **Algorithme** : HMAC-SHA256 minimum
+✅ **Enregistrements** : A/AAAA + PTR + DHCID systématiques
+✅ **Sécurité** : Clés TSIG robustes, update-policy restrictive
+✅ **Monitoring** : Logs détaillés, surveillance des échecs
+
+❌ **À éviter** : Méthodes `standard` et `ad-hoc` (obsolètes)
+❌ **Risques** : TSIG faibles (MD5), permissions trop larges
+❌ **Pièges** : Désynchronisation temporelle, clés différentes
+
+
 **Explications :**
 
 - **`include "/etc/bind/rndc.key";`** : Inclut le fichier contenant la clé TSIG.
