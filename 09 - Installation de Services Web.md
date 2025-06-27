@@ -104,10 +104,11 @@ Cette partie est inutile si vous utilisez l'interface web pour installer wordpre
   </VirtualHost>
   ```
 
-- **Activer le site `site1.learn-it.local` :**
+- **Activer le site `site1.learn-it.local` et recharger Apache :**
 
   ```bash
   sudo a2ensite site1.learn-it.local.conf
+  sudo systemctl reload apache2
   ```
 
 ### **7. Configurer les Entrées DNS**
