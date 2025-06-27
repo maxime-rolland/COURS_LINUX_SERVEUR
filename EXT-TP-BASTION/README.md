@@ -167,7 +167,29 @@ services:
    docker compose up -d
    ```
 
-5. **Initialiser la base de données MySQL**
+5. **Configurer les permissions du répertoire d'enregistrement**
+   ```bash
+   sudo chown 1000:1001 records
+   ```
+   
+   > **⚠️ Pourquoi cette étape est-elle cruciale ?**
+   >
+   > Cette commande modifie la propriété du répertoire `records` pour permettre à Guacamole d'enregistrer les sessions :
+   >
+   > **Détails techniques :**
+   > - **UID 1000** : Utilisateur par défaut du conteneur Guacamole (défini dans l'image Docker officielle)
+   > - **GID 1001** : Groupe configuré via `group_add: 1000` dans le docker-compose.yml
+   > - **Volume mapping** : `./records:/var/lib/guacamole/recordings` lie le répertoire hôte au conteneur
+   
+   > **Sécurité et bonnes pratiques :**
+   > - ✅ **Principe du moindre privilège** : Seul Guacamole peut écrire dans ce répertoire
+   > - ✅ **Isolation des conteneurs** : Le processus Guacamole n'a pas d'accès root sur l'hôte
+   > - ✅ **Audit centralisé** : Tous les enregistrements sont protégés et sauvegardables
+   > - ⚠️ **Attention** : Ne pas utiliser `777` qui créerait une faille de sécurité
+   >
+   > Cette étape garantit que **chaque connexion RDP/VNC/SSH** transitant par le bastion est **automatiquement enregistrée** pour l'audit, la formation et la conformité réglementaire.
+
+6. **Initialiser la base de données MySQL**
    ```bash
    # Attendre que MySQL soit complètement démarré
    docker compose logs db
