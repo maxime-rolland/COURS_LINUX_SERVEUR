@@ -24,22 +24,20 @@
 
 ## **Activer le routage IP**
 
-1. **Modifier le fichier `/etc/sysctl.conf`** :
+1. **Créer un fichier de configuration pour activer l'IP forwarding** :
 
    ```bash
-   sudo nano /etc/sysctl.conf
-   ```
-
-   Décommentez ou ajoutez la ligne :
-
-   ```ini
+   sudo tee /etc/sysctl.d/99-ipforward.conf <<'EOF'
    net.ipv4.ip_forward=1
+EOF
    ```
+
+   > Sur Debian 13, le fichier `/etc/sysctl.conf` n'est plus présent par défaut. Si votre système dispose de ce fichier, vous pouvez y ajouter la ligne `net.ipv4.ip_forward=1` à la place.
 
 2. **Appliquer les changements immédiatement** :
 
    ```bash
-   sudo sysctl -p
+   sudo sysctl --system
    ```
 
 ## **Configurer nftables pour le NAT**
