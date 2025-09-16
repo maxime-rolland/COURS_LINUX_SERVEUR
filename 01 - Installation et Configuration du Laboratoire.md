@@ -2,7 +2,7 @@
 
 ## **Installer server1**
 
-- **Système d'exploitation** : Debian 12 (Bookworm)
+- **Système d'exploitation** : Debian 13 (Trixie)
 - **Ressources** :
 
   - **Deux cartes réseau** :
@@ -18,7 +18,7 @@
 
 ## **Installer server2**
 
-- **Système d'exploitation** : Debian 12 (Bookworm)
+- **Système d'exploitation** : Debian 13 (Trixie)
 - **Ressources** :
 
   - **Une carte réseau** :
