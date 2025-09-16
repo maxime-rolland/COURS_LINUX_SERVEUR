@@ -16,8 +16,8 @@ L'objectif de ces exercices est de simuler un réseau d'entreprise simple en con
 
 1. **[Installation et configuration du laboratoire](01%20-%20Installation%20et%20Configuration%20du%20Laboratoire.md)**
 
-   - Installer **Server1** (Debian 12)
-   - Installer **Server2** (Debian 12)
+   - Installer **Server1** (Debian 13 - Trixie)
+   - Installer **Server2** (Debian 13 - Trixie)
    - Installer le **client Windows**
 
 2. **[Configuration des interfaces réseau](02%20-%20Configuration%20des%20Interfaces%20Réseau.md)**

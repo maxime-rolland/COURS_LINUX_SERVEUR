@@ -73,13 +73,13 @@ services:
 
 ---
 
-## **Installation de Docker sur Debian 12**
+## **Installation de Docker sur Debian 13**
 
 ### **Prérequis**
 
 #### **Configuration système requise**
 
-- **Version Debian** : Debian Bookworm 12 (stable)
+- **Version Debian** : Debian Trixie 13 (stable)
 - **Architecture** : 64-bit (x86_64/amd64)
 - **Privilèges** : Accès administrateur (`sudo`)
 

@@ -42,8 +42,11 @@ Un enregistrement **CNAME** (Canonical Name) est un type d'enregistrement DNS qu
 Sur **server1**, installez les paquets nécessaires :
 
 ```bash
-sudo apt install bind9 bind9utils bind9-doc
+sudo apt install bind9 bind9-utils bind9-dnsutils bind9-doc
 ```
+
+> [!NOTE]
+> Depuis Debian 13 (Bind 9.20), les utilitaires en ligne de commande ont été éclatés entre les paquets `bind9-utils` (outils d'administration) et `bind9-dnsutils` (clients comme `dig` ou `nslookup`). En installant les deux, vous retrouvez l'ensemble des commandes mentionnées dans la suite du cours.
 
 ### **2. Créer le répertoire pour les fichiers de zone**
 

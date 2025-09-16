@@ -17,14 +17,14 @@
    Le contenu devrait ressembler à ceci :
 
    ```ini
-   deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware
-   deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware
+   deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
+   deb-src http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
 
-   deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-   deb-src http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+   deb http://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
+   deb-src http://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
 
-   deb http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware
-   deb-src http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware
+   deb http://deb.debian.org/debian/ trixie-updates main contrib non-free non-free-firmware
+   deb-src http://deb.debian.org/debian/ trixie-updates main contrib non-free non-free-firmware
    ```
 
 3. **Modifier le fichier si nécessaire** :
@@ -35,7 +35,7 @@
      sudo nano /etc/apt/sources.list
      ```
 
-   - Assurez-vous que les dépôts pointent vers `bookworm` (Debian 12) et incluent les sections `main`, `contrib`, `non-free`, et `non-free-firmware` si nécessaire.
+   - Assurez-vous que les dépôts pointent vers `trixie` (Debian 13) et incluent les sections `main`, `contrib`, `non-free`, et `non-free-firmware` si nécessaire.
 
 ## **Mettre à Jour le système**
 

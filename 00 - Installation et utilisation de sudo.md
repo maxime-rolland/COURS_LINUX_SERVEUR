@@ -11,9 +11,9 @@
   - Permet de tracer les actions des utilisateurs.
   - Offre un contrôle granulaire sur les permissions.
 
-## **Installation de `sudo` sur Debian 12**
+## **Installation de `sudo` sur Debian 13**
 
-Par défaut, Debian 12 n'installe pas le paquet `sudo` lors de l'installation minimale. Vous devez donc l'installer manuellement.
+Par défaut, Debian 13 n'installe pas le paquet `sudo` lors de l'installation minimale. Vous devez donc l'installer manuellement.
 
 1. **Se connecter en tant que `root`**
 
@@ -169,7 +169,7 @@ Maintenant que `sudo` est installé et configuré, vous pouvez l'utiliser pour t
 
 ## **Conclusion**
 
-Vous avez maintenant installé et configuré `sudo` sur votre système Debian 12, ce qui vous permettra d'administrer votre système de manière sécurisée et efficace. Cette étape est cruciale pour les administrateurs système, car elle offre un meilleur contrôle des privilèges et contribue à la sécurité globale du système.
+Vous avez maintenant installé et configuré `sudo` sur votre système Debian 13, ce qui vous permettra d'administrer votre système de manière sécurisée et efficace. Cette étape est cruciale pour les administrateurs système, car elle offre un meilleur contrôle des privilèges et contribue à la sécurité globale du système.
 
 Assurez-vous d'utiliser `sudo` judicieusement tout au long du TP et de respecter les bonnes pratiques de sécurité.
 

@@ -246,7 +246,7 @@ sudo mysql_secure_installation
 
 ### **Services et systemd**
 
-- **systemd** est le système d'initialisation et de gestion des services sous Debian 12.
+- **systemd** est le système d'initialisation et de gestion des services sous Debian 13.
 
 - **Commandes utiles :**
 
