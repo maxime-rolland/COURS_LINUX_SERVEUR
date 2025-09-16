@@ -276,14 +276,22 @@ EXIT;
 - **Installer les extension PHP nécessaire au fonctionnement:**
 
 ```bash
-sudo apt install php-gd php-intl php-ldap php-bz2 php-zip php-mbstring php-dom php-curl -y
+sudo apt install php-gd php-intl php-ldap php-bz2 php-zip php-mbstring php-xml php-curl -y
 ```
+
+> [!NOTE]
+> Le module DOM est désormais fourni via le méta-paquet `php-xml` sur Debian 13. L'installation de `php-xml` active automatiquement les extensions `dom`, `simplexml`, `xml` et `xsl` nécessaires à GLPI.
 
 - **Configurer PHP:**
 
+Déterminez d'abord la version de PHP installée (Debian 13 fournit PHP 8.4 à la sortie, mais ce numéro peut évoluer) et ouvrez le fichier `php.ini` correspondant :
+
 ```bash
-sudo nano /etc/php/8.2/apache2/php.ini
+PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+sudo nano /etc/php/${PHP_VERSION}/apache2/php.ini
 ```
+
+Vous pouvez vérifier la valeur détectée avec `echo "$PHP_VERSION"` avant d'ouvrir le fichier si besoin.
 
 Chercher l'instruction `session.cookie_httponly` suivante et ajouter `on` :
 
