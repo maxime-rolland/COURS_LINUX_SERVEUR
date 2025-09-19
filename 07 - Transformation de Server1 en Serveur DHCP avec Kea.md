@@ -116,6 +116,8 @@ Voici le contenu du fichier de configuration, avec des commentaires expliquant c
         "subnet4": [
             {
                 "subnet": "192.168.200.0/24",
+                // Avec debian 13, le paquet de kea nécessite l'utilisation d'id qui étaient automatiquement définis dans les anciennes versions de KEA
+                "id":1,
                 // Dans ce réseau, nous définissons nos plages d'IP a allouer aux clients
                 "pools": [
                     {
@@ -334,6 +336,7 @@ sequenceDiagram
 #### **Problèmes Fréquents**
 
 1. **Signatures TSIG invalides** :
+
    ```bash
    # Vérifier synchronisation temporelle
    sudo ntpdate -s pool.ntp.org
@@ -344,6 +347,7 @@ sequenceDiagram
    ```
 
 2. **Permissions insuffisantes** :
+
    ```bash
    # BIND doit pouvoir écrire dans les zones
    sudo chown -R bind:bind /var/lib/bind/zones/
@@ -351,6 +355,7 @@ sequenceDiagram
    ```
 
 3. **Communications inter-services** :
+
    ```bash
    # Vérifier socket Kea DHCP4 ↔ DHCP-DDNS
    sudo netstat -unlp | grep 53001
@@ -370,7 +375,6 @@ sequenceDiagram
 ❌ **À éviter** : Méthodes `standard` et `ad-hoc` (obsolètes)
 ❌ **Risques** : TSIG faibles (MD5), permissions trop larges
 ❌ **Pièges** : Désynchronisation temporelle, clés différentes
-
 
 **Explications :**
 
