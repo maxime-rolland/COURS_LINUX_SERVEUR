@@ -189,7 +189,7 @@ sudo systemctl status mariadb
 Exécutez le script de sécurisation :
 
 ```bash
-sudo mysql_secure_installation
+sudo mariadb-secure-installation
 ```
 
 - **Étapes à suivre :**
