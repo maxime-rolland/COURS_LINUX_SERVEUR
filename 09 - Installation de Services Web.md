@@ -177,10 +177,11 @@ Pour installer WordPress sur `site2.learn-it.local`, répétez les mêmes étape
 ### **1. Télécharger GLPI**
 
 Sur **Server2**, téléchargez la dernière version de GLPI :
+https://github.com/glpi-project/glpi/releases/
 
 ```bash
 cd /tmp
-wget https://github.com/glpi-project/glpi/releases/download/10.0.7/glpi-10.0.7.tgz
+wget https://github.com/glpi-project/glpi/releases/download/10.0.X/glpi-10.0.X.tgz
 tar -xzvf glpi-10.0.7.tgz
 ```
 
@@ -231,7 +232,7 @@ EXIT;
   ```
 
 - **Contenu du fichier (selon la documentation officielle) :**
-
+https://glpi-install.readthedocs.io/fr/develop/prerequisites.html
   ```apache
   <VirtualHost *:80>
       ServerName glpi.learn-it.local
