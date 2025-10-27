@@ -181,7 +181,7 @@ https://github.com/glpi-project/glpi/releases/
 
 ```bash
 cd /tmp
-wget https://github.com/glpi-project/glpi/releases/download/10.0.X/glpi-10.0.X.tgz
+wget https://github.com/glpi-project/glpi/releases/download/11.0.1/glpi-11.0.1.tgz
 tar -xzvf glpi-10.0.7.tgz
 ```
 
