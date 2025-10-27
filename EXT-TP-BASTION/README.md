@@ -206,7 +206,7 @@ services:
    docker compose logs guacamole
    ```
 
-7. **Accéder à l'interface** : `http://localhost:8080/guacamole`
+7. **Accéder à l'interface** : `http://<ADRESSE IP OU NOM VOTRE SERVEUR DOCKER>:8080/guacamole`
    - Login par défaut : `guacadmin`
    - Mot de passe par défaut : `guacadmin`
 
@@ -711,3 +711,4 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 - **Configuration d'Apache Guacamole** pour l'accès RDP/SSH
 - **Bonnes pratiques de sécurité** pour les bastions
 - **Audit et traçabilité** des connexions à distance
+
