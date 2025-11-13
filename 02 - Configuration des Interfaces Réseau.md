@@ -123,7 +123,7 @@
 
      ```cmd
      ping 192.168.200.254
-     ping 192.168.200.2
+     ping 192.168.200.200
      ```
 
    Si les pings réussissent, la connectivité est en place.

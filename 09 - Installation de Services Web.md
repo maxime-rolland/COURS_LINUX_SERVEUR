@@ -181,8 +181,8 @@ https://github.com/glpi-project/glpi/releases/
 
 ```bash
 cd /tmp
-wget https://github.com/glpi-project/glpi/releases/download/11.0.1/glpi-11.0.1.tgz
-tar -xzvf glpi-10.0.7.tgz
+wget https://github.com/glpi-project/glpi/releases/download/11.0.2/glpi-11.0.2.tgz
+tar -xzvf glpi-11.0.2.tgz
 ```
 
 ### **2. Installer GLPI**

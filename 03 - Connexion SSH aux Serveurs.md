@@ -60,7 +60,7 @@
 
    - Collez le contenu de votre clé publique dans ce fichier, enregistrez et quittez.
 
-2. **Répéter les étapes pour Server2** (IP : `192.168.200.2`)
+2. **Répéter les étapes pour Server2** (IP : `192.168.200.200`)
 
 ## **Se connecter en SSH depuis le client Windows**
 
@@ -68,7 +68,7 @@
 
   ```powershell
   ssh user@192.168.200.254
-  ssh user@192.168.200.2
+  ssh user@192.168.200.200
   ```
 
 ---

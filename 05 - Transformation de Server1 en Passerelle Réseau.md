@@ -29,7 +29,7 @@
    ```bash
    sudo tee /etc/sysctl.d/99-ipforward.conf <<'EOF'
    net.ipv4.ip_forward=1
-EOF
+   EOF
    ```
 
    > Sur Debian 13, le fichier `/etc/sysctl.conf` n'est plus présent par défaut. Si votre système dispose de ce fichier, vous pouvez y ajouter la ligne `net.ipv4.ip_forward=1` à la place.
