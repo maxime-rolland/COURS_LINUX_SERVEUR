@@ -17,3 +17,10 @@
 - Mettre en place portainer 
 
 - Déploiement automatique via GitHub
+
+
+Liens utiles : 
+
+- https://civilisation-it.fr/tutoriels/docker/introduction/
+
+- https://www.crowdsec.net/blog/enhance-docker-compose-security
