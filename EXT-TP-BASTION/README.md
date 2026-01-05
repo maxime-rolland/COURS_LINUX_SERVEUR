@@ -772,15 +772,6 @@ iifname $DMZ_IF oifname $WAN_IF ip saddr $GUAC_PROXY_IP accept
 
 ---
 
-## ✅ Ce que je peux faire en plus (si tu veux)
-
-Je peux aussi :
-- te générer le fichier `nftables.conf` séparé
-- te générer un `docker-compose.yml` Guacamole + reverse proxy configuré **spécifiquement pour `/guacamole`**
-- te faire un `install.sh` + `test.sh` (automatisé, pédagogique pour étudiants)
-
-Si tu veux, donne-moi juste **ton docker-compose actuel** (ou le dossier `EXT-TP-BASTION`) et je te l’intègre proprement dans le README (avec variables, explications, captures).
-
 ## 🔐 Sécurisation obligatoire
 
 ### HTTPS avec reverse proxy
