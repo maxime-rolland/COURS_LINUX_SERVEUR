@@ -414,130 +414,372 @@ services:
 
    
 ---
-## Redirection de port pour accès distant et renforcement des accès:
+# EXT-TP-BASTION — Bastion Guacamole + Routage/NAT + DMZ/LAN (Debian 13 + nftables)
 
-Voici l'objectif de cette configuration :
+## 🎯 Objectif du TP
+
+Mettre en place une maquette réseau réaliste en VM autour d’un **routeur/pare-feu Debian 13** disposant de **3 interfaces réseau**, et d’un bastion d’administration **Guacamole (Docker)** placé en DMZ.
+
+L’objectif est de simuler une architecture **WAN / DMZ / LAN**, avec :
+
+✅ Accès **Internet sortant** pour le LAN via NAT/PAT  
+✅ Publication du bastion **Guacamole** depuis l’extérieur sur :  
+➡️ `http://<IP_EXT>:8080/guacamole`  
+✅ Autorisation des connexions du bastion vers le LAN uniquement sur :  
+- SSH (`22/tcp`)
+- RDP (`3389/tcp`)
+✅ Interdiction de tout le reste par défaut  
+✅ Administration SSH du routeur **uniquement depuis la machine hôte** (192.168.88.1)
+
+---
+
+## 🧱 Architecture et composants
+
+### 🛡 Serveur Debian 13
+Rôle :
+- Routeur
+- Pare-feu (`nftables`)
+- NAT/PAT (`masquerade`)
+- DNAT (publication du bastion)
+
+Interfaces :
+- `ens33` : WAN / NAT (Internet sortant)
+- `ens34` : DMZ (Guacamole)
+- `ens38` : LAN (réseau interne)
+
+### 🧩 Bastion Guacamole (Docker) en DMZ
+- Proxy/reverse proxy docker + guacamole + guacd (stack classique)
+- IP DMZ : `192.168.34.2`
+
+### 🖥 Machines LAN
+Réseau interne totalement inaccessible depuis l’extérieur.
+
+---
+
+## 🖧 Plan d’adressage (exemple recommandé)
+
+| Zone | Réseau | Passerelle (Debian) |
+|------|--------|----------------------|
+| WAN/NAT | `192.168.88.0/24` | DHCP |
+| DMZ | `192.168.34.0/24` | `192.168.34.1` |
+| LAN | `192.168.38.0/24` | `192.168.38.1` |
+
+| Machine | IP |
+|--------|----|
+| Debian DMZ | `192.168.34.1/24` |
+| Debian LAN | `192.168.38.1/24` |
+| Guacamole Proxy | `192.168.34.2/24` |
+| LAN Clients | `192.168.38.X/24` |
+| Host (admin) | `192.168.88.1` |
+
+---
+
+## ⚙️ Configuration des interfaces (exemple Debian)
+
+À placer dans `/etc/network/interfaces` (ou `/etc/network/interfaces.d/` selon vos habitudes) :
 
 ```text
-                                +---------------------+
-                                |   Client Externe    |
-                                | IP : x.x.x.x        |
-                                +---------+-----------+
-                                          |
-                                          | Requête vers IP publique:8080
-                                          v
-                            +-------------+--------------+ 
-                            |   Routeur avec NAT (DNAT)  |
-                            | IP Publique : 203.0.113.10 |
-                            | DNAT : 203.0.113.10:8080 → |
-                            |        192.168.1.100:8080  |
-                            +-------------+--------------+
-                              |              |             
-          +-------------------+              +-------------------+
-          |                                                      |
-+---------v---------+                                +-----------v------------+
-|   Client LAN      |                                |     Bastion Guacamole  |
-| IP : 192.168.130.*|                                | IP : 192.168.1.100     |
-+---------+---------+                                | Accès Web port 8080    |
-          |                                          +-------+----------------+
-          |                                                  |
-          | HTTP/HTTPS                                       | Accès via RDP/VNC/SSH
-          |                                                  |
-          |                                  +---------------+-------------------+
-          |                                  |                                   |
-          |                      +-----------v------------+         +------------v------------+
-          |                      |     Serveur Interne 2  |         |    Serveur Interne 1    |
-          |                      |     IP : 192.168.200.* |         |    IP : 192.168.200.*   |
-          |                      +------------------------+         +-------------------------+
-          |                                  |
-          +---------------------------------+|
-                     Accès HTTP/HTTPS direct
+auto lo
+iface lo inet loopback
 
+# WAN (NAT) via DHCP
+auto ens33
+iface ens33 inet dhcp
 
-Résumé du flux :
-1. Le client externe contacte 203.0.113.10:8080.
-2. Le routeur applique une règle DNAT et redirige vers 192.168.1.100:8080 (Guacamole).
-3. Le bastion affiche l'interface web de Guacamole.
-4. L'utilisateur externe se connecte ensuite à un des serveurs via le bastion.
-5. Le client présent dans le sous réseau du LAN bureautique accède aux sites du serveur 2 en HTTP.
+# DMZ
+auto ens34
+iface ens34 inet static
+    address 192.168.34.1/24
+
+# LAN
+auto ens38
+iface ens38 inet static
+    address 192.168.38.1/24
 ```
-# Configuration réseau pour cet exemple :
-- Un sous réseau en 192.168.1.0 pour le bastion (DMZ)
-- Un sous réseau en 192.168.200.0 pour les serveurs
-- Un sous réseau en 192.168.130.0 pour les postes clients.
 
-A l'aide du fichier nftables.conf il est possible de router le **port 8080** de notre container Guacamole afin de pouvoir y accèder depuis l'extérieur (DMZ). Cette configuration ajoute une réelle gestion des flux et permet d'accroître la sécurité des accès. Tout ce qui n'est pas autorisé dans la table est drop.
+> Adapter les noms d’interfaces si nécessaire (ex. `enp0s3`, `enp0s8`…).
 
-nftables fonctionne avec 2 tables et 2 chaines dans cet exemple.
-- **Dans la table ip nat:**
-   - **La chaine prerouting** :  Intervient à l’arrivée du paquet, avant le routage ; utilisée pour DNAT (Destination NAT).
-   - **La chaine postrouting** : Intervient juste avant que le paquet sorte, après le routage ; utilisée pour SNAT (Source NAT).
-- **Dans la table ip table:**
-   - **La chaine input**: Concerne les paquets destinés à la machine locale (pare-feu pour le serveur/routeur).
-   - **La chaine forward**: Concerne les paquets routés/transitant par la machine (pare-feu entre interfaces réseau).
+---
+
+## 🗺️ Schéma Mermaid (réseau + flux)
+
+```mermaid
+flowchart LR
+    %% Styles
+    classDef wan fill:#fde68a,stroke:#b45309,color:#000,stroke-width:1px;
+    classDef fw fill:#c7d2fe,stroke:#3730a3,color:#000,stroke-width:2px;
+    classDef dmz fill:#bbf7d0,stroke:#166534,color:#000,stroke-width:1px;
+    classDef lan fill:#fecaca,stroke:#991b1b,color:#000,stroke-width:1px;
+    classDef host fill:#e5e7eb,stroke:#374151,color:#000,stroke-width:1px;
+
+    %% Nodes
+    HOST["🧑‍💻 Machine Hôte<br/>192.168.88.1"]:::host
+    WAN["🌍 WAN / NAT Network<br/>Internet / NAT"]:::wan
+
+    FW["🛡 Debian 13<br/>Firewall / Router / NAT<br/><br/>ens33: DHCP (WAN)<br/>ens34: 192.168.34.1/24 (DMZ)<br/>ens38: 192.168.38.1/24 (LAN)"]:::fw
+
+    DMZNET["🟩 DMZ Network<br/>192.168.34.0/24"]:::dmz
+    GUAC["🧩 Guacamole Proxy (Docker)<br/>192.168.34.2:8080"]:::dmz
+
+    LANNET["🟥 LAN Network<br/>192.168.38.0/24"]:::lan
+    LANPC["🖥 Machines LAN<br/>192.168.38.X"]:::lan
+
+    %% Topology
+    HOST -->|Accès externe| WAN
+    WAN -->|ens33| FW
+
+    FW -->|ens34| DMZNET
+    DMZNET --> GUAC
+
+    FW -->|ens38| LANNET
+    LANNET --> LANPC
+
+    %% Allowed flows
+    HOST -.->|✅ SSH admin<br/>TCP 22 (uniquement host)| FW
+    WAN -.->|✅ DNAT/PAT<br/>TCP 8080 → 192.168.34.2:8080| GUAC
+    LANPC -.->|✅ NAT sortant (masquerade)| FW
+    FW -.->|✅ Internet| WAN
+    GUAC -.->|✅ vers LAN uniquement<br/>TCP 22 / 3389| LANPC
+
+    %% Denied flows
+    WAN -.->|❌ Interdit vers LAN| LANPC
+    DMZNET -.->|❌ DMZ vers LAN (sauf Guac)| LANPC
+```
+
+---
+
+## 🔥 Flux autorisés (règles fonctionnelles)
+
+### 1) Publication Guacamole depuis l’extérieur
+
+| Source | Destination          | Port       | Action             |
+| ------ | -------------------- | ---------- | ------------------ |
+| WAN    | `192.168.34.2` (DMZ) | `8080/tcp` | ✅ ALLOW (DNAT/PAT) |
+
+📌 NAT :
+
+```text
+<IP_EXT>:8080  →  192.168.34.2:8080
+```
+
+> ⚠️ Le chemin `/guacamole` est géré par le proxy/reverse proxy Docker (HTTP routing).
+> nftables ne filtre que sur IP/port.
+
+---
+
+### 2) Administration SSH du routeur Debian uniquement depuis l’hôte
+
+| Source         | Destination    | Port     | Action  |
+| -------------- | -------------- | -------- | ------- |
+| `192.168.88.1` | Debian (ens33) | `22/tcp` | ✅ ALLOW |
+| autres IP      | Debian (ens33) | `22/tcp` | ❌ DROP  |
+
+---
+
+### 3) LAN → Internet via NAT
+
+| Source                  | Destination  | Action       |
+| ----------------------- | ------------ | ------------ |
+| LAN (`192.168.38.0/24`) | WAN/Internet | ✅ MASQUERADE |
+
+---
+
+### 4) Guacamole → LAN (SSH/RDP uniquement)
+
+| Source         | Destination             | Ports        | Action  |
+| -------------- | ----------------------- | ------------ | ------- |
+| `192.168.34.2` | LAN (`192.168.38.0/24`) | `22`, `3389` | ✅ ALLOW |
+| `192.168.34.2` | LAN                     | autres       | ❌ DROP  |
+
+---
+
+## ✅ Préparation Debian (routage)
+
+Activer le forwarding :
 
 ```bash
-sudo nano /etc/nftables.conf
+echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-forwarding.conf
+sysctl -p /etc/sysctl.d/99-forwarding.conf
+```
+
+---
+
+## 🧱 Configuration nftables
+
+📌 À placer dans `/etc/nftables.conf`
+
+```nft
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+define WAN_IF        = "ens33"
+define DMZ_IF        = "ens34"
+define LAN_IF        = "ens38"
+
+define DMZ_NET       = 192.168.34.0/24
+define LAN_NET       = 192.168.38.0/24
+
+define GUAC_PROXY_IP = 192.168.34.2
+
+table inet filter {
+
+  chain input {
+    type filter hook input priority 0;
+    policy drop;
+
+    iif "lo" accept
+    ct state established,related accept
+
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+
+    # SSH admin uniquement depuis l'hôte (192.168.88.1)
+    iifname $WAN_IF ip saddr 192.168.88.1 tcp dport 22 accept
+  }
+
+  chain forward {
+    type filter hook forward priority 0;
+    policy drop;
+
+    ct state established,related accept
+
+    # LAN -> Internet
+    iifname $LAN_IF oifname $WAN_IF ip saddr $LAN_NET accept
+
+    # DMZ -> Internet (optionnel mais utile)
+    iifname $DMZ_IF oifname $WAN_IF ip saddr $DMZ_NET accept
+
+    # Publication Guacamole : WAN:8080 -> DMZ:8080
+    iifname $WAN_IF oifname $DMZ_IF ip daddr $GUAC_PROXY_IP tcp dport 8080 accept
+
+    # Guacamole -> LAN : SSH + RDP uniquement
+    iifname $DMZ_IF oifname $LAN_IF ip saddr $GUAC_PROXY_IP ip daddr $LAN_NET tcp dport {22, 3389} accept
+  }
+
+  chain output {
+    type filter hook output priority 0;
+    policy accept;
+  }
+}
 
 table ip nat {
-    chain prerouting {
-        type nat hook prerouting priority -100;
-        # Toutes les requètes TCP sur le port 8080 qui arrivent sur l'interface
-        # "ens33" sont redirigées vers le bastion guacamole
-        iif "ens33" tcp dport 8080 dnat to 192.168.1.100:8080
-    }
 
-    chain postrouting {
-        type nat hook postrouting priority 100;
-        # Interface de routage NAT
-        oifname "ens33" masquerade
-    }
-}
+  chain prerouting {
+    type nat hook prerouting priority -100;
+    policy accept;
 
-table ip filter {
-    chain input {
-        type filter hook input priority 0;
-        policy drop;
+    # DNAT : WAN:8080 -> DMZ:8080
+    iifname $WAN_IF tcp dport 8080 dnat to $GUAC_PROXY_IP:8080
+  }
 
-        iif "lo" accept
-        # Accepte les paquets liés à des connexions déjà établies (utile pour laisser passer le trafic de retour)
-        ct state established,related accept
-        # Autorise le ping
-        ip protocol icmp accept
-        # Autorise le port SSH sur le routeur
-        tcp dport 22 accept
-        # Autorise les ports DNS
-        tcp dport 53 accept
-        udp dport 53 accept
-        # Autorise le port DHCP pour la distribution des adresses
-        udp dport 67 accept
-    }
+  chain postrouting {
+    type nat hook postrouting priority 100;
+    policy accept;
 
-    chain forward {
-        type filter hook forward priority 0;
-        # Politique de sécurité, tout ce qui n'est pas autorisé est drop
-        policy drop;
+    # NAT sortant LAN -> WAN
+    oifname $WAN_IF ip saddr $LAN_NET masquerade
 
-        ct state established,related accept
-        # Autorise le serveur DNS à sortir vers d'autres DNS
-        ip saddr 192.168.200.254 ip saddr 0.0.0.0/0 tcp dport 53 accept
-        # Autorise les accès depuis l'exterieur sur le bastion
-        iif "ens33" ip saddr 0.0.0.0/0 ip daddr 192.168.1.100 tcp dport 8080 accept
-        # Autorise le VLAN du bastion à accéder à accèder en SSH et RDP aux serveurs
-        ip saddr 192.168.1.0/24 ip daddr 192.168.200.0/24 tcp dport {22, 3389} accept
-        # Autorise l'accès au sous réseau au WEB par les ports HTTP, HTTPS
-        ip saddr 192.168.0.0/16 tcp dport {80, 443} accept
-        # Redirige les requêtes DNS vers le serveur DNS
-        ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 tcp dport 53 accept
-        ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 udp dport 53 accept
-        #Autorise les requêtes DHCP vers le serveur DHCP
-        ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 tcp dport {67, 68} accept
-        ip saddr 192.168.0.0/16 ip daddr 192.168.200.254 udp dport {67, 68} accept
-        # Autorise les clients du VLAN bureautique d'accéder au serveur LAMP (Server2)
-        ip saddr 192.168.130.0/24 ip daddr 192.168.200.200 tcp dport {80, 443}
-    }
+    # NAT sortant DMZ -> WAN
+    oifname $WAN_IF ip saddr $DMZ_NET masquerade
+  }
 }
 ```
+
+---
+
+## 🔄 Activation / Reload nftables
+
+```bash
+systemctl enable nftables
+systemctl restart nftables
+nft list ruleset
+```
+
+---
+
+## ✅ Checklist de validation
+
+### 1) Publication Guacamole
+
+```bash
+curl -I http://<IP_WAN_DEBIAN>:8080/guacamole
+```
+
+Si cela échoue, tester :
+
+```bash
+curl -I http://<IP_WAN_DEBIAN>:8080/
+```
+
+➡️ Si `/` fonctionne mais pas `/guacamole`, c’est la **config du reverse proxy docker** qui ne route pas ce chemin.
+
+---
+
+### 2) Guacamole → LAN (SSH/RDP uniquement)
+
+Depuis `192.168.34.2` :
+
+```bash
+nc -vz 192.168.38.10 22
+nc -vz 192.168.38.10 3389
+nc -vz 192.168.38.10 80    # doit échouer
+```
+
+---
+
+### 3) LAN → Internet via NAT
+
+Depuis une machine LAN :
+
+```bash
+ping 8.8.8.8
+curl https://example.com
+```
+
+---
+
+## 🔐 Durcissement (bonus)
+
+### Restreindre DMZ → Internet uniquement à Guacamole
+
+Remplacer :
+
+```nft
+iifname $DMZ_IF oifname $WAN_IF ip saddr $DMZ_NET accept
+```
+
+par :
+
+```nft
+iifname $DMZ_IF oifname $WAN_IF ip saddr $GUAC_PROXY_IP accept
+```
+
+---
+
+## ✅ Résultat attendu
+
+* L’accès externe au bastion se fait via :
+
+  ✅ `http://<IP_EXT>:8080/guacamole`
+
+* Le LAN reste protégé :
+
+  * ❌ aucun accès direct depuis WAN
+  * ✅ accès SSH/RDP uniquement depuis Guacamole
+
+* Le LAN sort sur Internet via NAT ✅
+
+---
+
+## ✅ Ce que je peux faire en plus (si tu veux)
+
+Je peux aussi :
+- te générer le fichier `nftables.conf` séparé
+- te générer un `docker-compose.yml` Guacamole + reverse proxy configuré **spécifiquement pour `/guacamole`**
+- te faire un `install.sh` + `test.sh` (automatisé, pédagogique pour étudiants)
+
+Si tu veux, donne-moi juste **ton docker-compose actuel** (ou le dossier `EXT-TP-BASTION`) et je te l’intègre proprement dans le README (avec variables, explications, captures).
 
 ## 🔐 Sécurisation obligatoire
 
