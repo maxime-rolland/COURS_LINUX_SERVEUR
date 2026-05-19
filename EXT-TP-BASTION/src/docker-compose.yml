@@ -5,7 +5,7 @@ services:
     environment:
       GUACD_LOG_LEVEL: debug
     volumes:
-    - ./records:/var/lib/guacamole/recordings
+      - ./records:/var/lib/guacamole/recordings
 
   guacamole:
     image: guacamole/guacamole
@@ -21,10 +21,46 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: Azerty01
       TOTP_ENABLED: "true"
+      # --- Extension custom « AI Session Review » (cf. chapitre 06) ---
+      GUACAMOLE_HOME: /etc/guacamole          # fige le home (sinon /tmp aléatoire)
+      AI_REVIEW_DB_HOSTNAME: db
+      AI_REVIEW_DB_PORT: "3306"
+      AI_REVIEW_DB_DATABASE: guacamoledb
+      AI_REVIEW_DB_USERNAME: user
+      AI_REVIEW_DB_PASSWORD: Azerty01
     ports:
       - 8080:8080
     volumes:
       - ./records:/var/lib/guacamole/recordings
+      # --- Extension custom « AI Session Review » (cf. chapitre 06) ---
+      # Bind mount du JAR produit par `mvn package`.
+      - ./ext-guacamole-ai-session-review/target/extensions:/etc/guacamole/extensions:ro
+
+  # --- Extension custom « AI Session Review » (cf. chapitre 06) ---
+  # Worker IA : scanne ./records, analyse les sessions terminées via
+  # gemini-cli + guacenc-extract, écrit dans session_ai_summary.
+  worker:
+    build: ./ext-guacamole-ai-session-review/worker
+    restart: always
+    user: "1000:1000"
+    group_add:
+      - "989"                                  # GID du groupe docker hôte : `getent group docker`
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: user
+      DB_PASSWORD: Azerty01
+      DB_NAME: guacamoledb
+      RECORDS_DIR: /home/user/records          # mêmes chemins host/container (DinD transparent)
+      DOCKER_IMAGE: guacenc-extract
+      WATCH_SLEEP_S: "60"
+      HOME: /home/user
+    volumes:
+      - /home/user/records:/home/user/records  # bind miroir du host
+      - /home/user/.gemini:/home/user/.gemini  # OAuth gemini partagée avec l'hôte
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - db
 
   db:
     image: mysql:8.0
@@ -34,6 +70,8 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: Azerty01
       MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    ports:
+      - "127.0.0.1:3306:3306"                  # loopback uniquement (debug worker IA)
     volumes:
       - ./db:/var/lib/mysql
       - ./initdb.sql:/initdb.sql

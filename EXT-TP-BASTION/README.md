@@ -30,6 +30,14 @@ L'objectif de cette extension est d'apprendre à déployer un **bastion d'accès
    - **Déploiement** avec Docker Compose
    - **Configuration** et premiers tests d'accès
 
+5. **[Déployer l'extension custom AI Session Review](./06%20-%20Extension%20custom%20AI%20Session%20Review.md)** 🧪 *(en cours de développement)*
+   - **Couche d'audit IA** par-dessus les sessions enregistrées
+   - `git clone` du dépôt **`ext-guacamole-ai-session-review`** à côté du `docker-compose.yml`
+   - Build du **JAR Java** via Maven en conteneur (manifeste + API REST + UI patches)
+   - Ajout du service **worker Python** (Gemini + `guacenc`) au `docker-compose.yml`
+   - Création des tables `session_ai_summary` / `suspicious_event`
+   - Test bout-en-bout : API REST + **menu utilisateur Guacamole + modale** « Revue IA »
+
 **Conseils pour cette extension :**
 
 - Appliquez les **bonnes pratiques de sécurité** apprises dans le cours principal
@@ -284,6 +292,7 @@ services:
 3. [Pare-feu et NAT avec nftables](./03%20-%20Pare-feu%20et%20NAT%20avec%20nftables.md)
 4. [Validation et durcissement](./04%20-%20Validation%20et%20durcissement.md)
 5. [Sécurisation Guacamole (TOTP et HTTPS)](./05%20-%20Securisation%20Guacamole%20(TOTP%20et%20HTTPS).md)
+6. [Extension custom AI Session Review](./06%20-%20Extension%20custom%20AI%20Session%20Review.md) 🧪 *(en cours de développement)*
 
 ## 📚 Ressources complémentaires
 
