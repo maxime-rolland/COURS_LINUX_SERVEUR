@@ -171,6 +171,63 @@ gemini auth login
 ls ~/.gemini/         # doit contenir credentials.json ou équivalent
 ```
 
+Méthode 2 — Via clé API dans le docker-compose.yml
+
+💡 Quand utiliser cette méthode ? Si le serveur n'a pas de navigateur disponible ou si tu veux éviter le login interactif.
+
+Obtenir la clé API Gemini
+
+Ouvre un navigateur et va sur https://aistudio.google.com/apikey
+Connecte-toi avec un compte Google
+Clique sur "Create API key"
+Sélectionne "Create API key in new project"
+Copie la clé générée (commence par AIza...)
+
+⚠️ Attention : Lors de la création du projet, veille à rester sur le niveau de facturation "sans frais" pour ne pas être débité. Ce niveau est gratuit mais limité en nombre de requêtes par minute et par jour, ce qui est suffisant pour un usage en lab.
+
+Ajouter la clé dans le docker-compose.yml
+Dans le service worker, ajoute GEMINI_API_KEY dans le bloc environment :
+
+```bash
+worker:
+  build: ./ext-guacamole-ai-session-review/worker
+  restart: always
+  user: "1000:1000"
+  group_add:
+    - "989"
+  environment:
+    DB_HOST: db
+    DB_PORT: "3306"
+    DB_USER: user
+    DB_PASSWORD: Azerty01
+    DB_NAME: guacamoledb
+    RECORDS_DIR: /home/user/records
+    DOCKER_IMAGE: guacenc-extract
+    WATCH_SLEEP_S: "60"
+    HOME: /home/user
+    GEMINI_API_KEY: "LA_CLE_API"    # <-- ajouter cette ligne
+  volumes:
+    - /home/user/records:/home/user/records
+    - /home/user/.gemini:/home/user/.gemini
+    - /var/run/docker.sock:/var/run/docker.sock
+  depends_on:
+    - db
+```
+
+Vérifier la configuration
+
+```bash
+bashgrep GEMINI_API_KEY docker-compose.yml
+```
+Tu dois voir la ligne avec ta clé.
+
+Appliquer et vérifier
+
+```bash
+bashdocker compose down
+docker compose up -d
+```
+
 ### 6) Étendre le `docker-compose.yml` du bastion
 
 Modifier le `docker-compose.yml` racine pour :
