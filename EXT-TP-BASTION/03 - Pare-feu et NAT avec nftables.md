@@ -32,6 +32,10 @@ table inet filter {
 
     # SSH admin uniquement depuis l'hôte (192.168.88.1)
     iifname $WAN_IF ip saddr 192.168.88.1 tcp dport 22 accept
+
+    # DNS depuis la DMZ vers server1
+    iifname $DMZ_IF ip saddr $DMZ_NET udp dport 53 accept
+    iifname $DMZ_IF ip saddr $DMZ_NET tcp dport 53 accept
   }
 
   chain forward {
