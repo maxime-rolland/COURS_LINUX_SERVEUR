@@ -10,53 +10,47 @@
 
 2. **Vérifier le contenu du fichier** :
 
-   ```bash
+```bash
    cat /etc/apt/sources.list
-   ```
+```
 
    Le contenu devrait ressembler à ceci :
 
-   ```ini
-
-deb <http://deb.debian.org/debian/> trixie main non-free-firmware
-deb-src <http://deb.debian.org/debian/> trixie main non-free-firmware
-
-deb <http://security.debian.org/debian-security> trixie-security main non-free-firmware
-deb-src <http://security.debian.org/debian-security> trixie-security main non-free-firmware
-
-deb <http://deb.debian.org/debian/> trixie-updates main non-free-firmware
-deb-src <http://deb.debian.org/debian/> trixie-updates main non-free-firmware
-
+```ini
+   deb http://deb.debian.org/debian/ trixie main non-free-firmware
+   deb-src http://deb.debian.org/debian/ trixie main non-free-firmware
+   deb http://security.debian.org/debian-security trixie-security main non-free-firmware
+   deb-src http://security.debian.org/debian-security trixie-security main non-free-firmware
+   deb http://deb.debian.org/debian/ trixie-updates main non-free-firmware
+   deb-src http://deb.debian.org/debian/ trixie-updates main non-free-firmware
 ```
 
 3. **Modifier le fichier si nécessaire** :
 
    - Éditez le fichier avec :
 
-     ```bash
+```bash
      sudo nano /etc/apt/sources.list
-     ```
+```
 
    - Assurez-vous que les dépôts pointent vers `trixie` (Debian 13) et incluent les sections `main`, `contrib`, `non-free`, et `non-free-firmware` si nécessaire.
 
-## **Mettre à Jour le système**
+## **Mettre à jour le système**
 
 1. **Mettre à jour la liste des paquets** :
 
-   ```bash
+```bash
    sudo apt update
-   ```
+```
 
 2. **Mettre à niveau les paquets installés** :
 
-   ```bash
+```bash
    sudo apt full-upgrade
-   ```
+```
 
 3. **Utiliser `journalctl` pour vérifier les logs de mise à jour** :
 
-   ```bash
+```bash
    sudo journalctl -u apt-daily.service
-   ```
-
----
+```
