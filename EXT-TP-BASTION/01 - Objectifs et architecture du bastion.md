@@ -82,25 +82,25 @@ flowchart LR
     LANPC["🖥 Machines LAN<br/>192.168.38.X"]:::lan
 
     %% Topology
-    HOST -->|Accès externe| WAN
-    WAN -->|ens33| FW
+    HOST -->|"Accès externe"| WAN
+    WAN -->|"ens33"| FW
 
-    FW -->|ens34| DMZNET
+    FW -->|"ens34"| DMZNET
     DMZNET --> GUAC
 
-    FW -->|ens38| LANNET
+    FW -->|"ens38"| LANNET
     LANNET --> LANPC
 
     %% Allowed flows
-    HOST -.->|✅ SSH admin<br/>TCP 22 (uniquement host)| FW
-    WAN -.->|✅ DNAT/PAT<br/>TCP 8080 → 192.168.34.2:8080| GUAC
-    LANPC -.->|✅ NAT sortant (masquerade)| FW
-    FW -.->|✅ Internet| WAN
-    GUAC -.->|✅ vers LAN uniquement<br/>TCP 22 / 3389| LANPC
+    HOST -.->|"✅ SSH admin<br/>TCP 22 (uniquement host)"| FW
+    WAN -.->|"✅ DNAT/PAT<br/>TCP 8080 → 192.168.34.2:8080"| GUAC
+    LANPC -.->|"✅ NAT sortant (masquerade)"| FW
+    FW -.->|"✅ Internet"| WAN
+    GUAC -.->|"✅ vers LAN uniquement<br/>TCP 22 / 3389"| LANPC
 
     %% Denied flows
-    WAN -.->|❌ Interdit vers LAN| LANPC
-    DMZNET -.->|❌ DMZ vers LAN (sauf Guac)| LANPC
+    WAN -.->|"❌ Interdit vers LAN"| LANPC
+    DMZNET -.->|"❌ DMZ vers LAN (sauf Guac)"| LANPC
 ```
 
 ---
