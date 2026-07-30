@@ -91,7 +91,7 @@ table ip nat {
 ## 🔄 Activation / rechargement
 
 ```bash
-systemctl enable nftables
-systemctl restart nftables
-nft list ruleset
+sudo systemctl enable nftables
+sudo systemctl restart nftables
+sudo nft list ruleset
 ```
