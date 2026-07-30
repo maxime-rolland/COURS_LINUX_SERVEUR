@@ -278,6 +278,9 @@ https://glpi-install.readthedocs.io/fr/develop/prerequisites.html
 
 ```bash
 sudo apt install php-gd php-intl php-ldap php-bz2 php-zip php-mbstring php-xml php-curl -y
+
+sudo apt install php-bcmath
+sudo systemctl restart apache2
 ```
 
 > [!NOTE]
