@@ -1,0 +1,142 @@
+# 📘 Guide d'installation d'une pile LEMP
+
+Ce guide vous accompagne pas à pas pour installer et configurer une pile **LEMP** (Linux, Nginx, MariaDB, PHP) sur votre serveur.
+
+---
+
+## 1. Installation des composants 💻
+
+Mettez à jour votre système, puis installez tous les paquets nécessaires en une seule commande.
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install nginx mariadb-server php-fpm php-mysql -y ```
+
+##2. Sécurisation de la base de données MariaDB 🔒
+
+Exécutez le script de sécurisation pour protéger votre base de données. Il vous demandera de :
+
+- Créer un mot de passe pour l'utilisateur 'root'
+
+- Supprimer les configurations par défaut non sécurisées
+
+```bash
+
+sudo mariadb-secure-installation
+```
+
+##3. Configuration de Nginx pour PHP ⚙️
+
+Modifiez le fichier de configuration par défaut de Nginx pour qu'il puisse traiter les requêtes PHP.
+
+**Ouvrir le fichier de configuration :**
+```bash
+sudo nano /etc/nginx/sites-available/default
+```
+
+**Remplacez le contenu par le code suivant :**
+
+⚠️ Assurez-vous que la version de PHP-FPM ('php8.4-fpm.sock') correspond bien à la version installée sur votre système.
+```nginx
+
+server {
+    listen 80;
+    listen [::]:80;
+
+    root /var/www/html;
+    index index.php index.html index.htm;
+
+    server_name server2.learn-it.local;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+**Testez la configuration et redémarrez Nginx :**
+``` bash 
+sudo nginx -t
+sudo systemctl restart nginx && sudo systemctl status nginx
+```
+
+## 4. Démarrage des services et permissions 🛡️
+
+Démarrez les services et appliquez les permissions correctes sur le dossier de votre site web pour éviter les erreurs d'accès.
+
+```bash
+
+# Démarrez et activez PHP-FPM
+sudo systemctl start php8.4-fpm
+sudo systemctl enable php8.4-fpm
+
+# Appliquez les permissions sur le dossier racine du site
+sudo chown -R www-data:www-data /var/www/html/
+sudo find /var/www/html/ -type d -exec chmod 755 {} \;
+sudo find /var/www/html/ -type f -exec chmod 644 {} \;
+```
+## 5. Création et test des pages ✅
+**Page d'accueil ('index.html')**
+
+```bash 
+sudo nano /var/www/html/index.html
+```
+
+Ajoutez le contenu suivant :
+
+``` bash 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mon Serveur LEMP</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>C'est un succès !</h1>
+    <p>Votre serveur web Nginx fonctionne parfaitement.</p>
+</body>
+</html>
+```
+
+**Page de test PHP ('info.php')**
+
+``` bash
+sudo nano /var/www/html/info.php
+```
+
+
+Ajoutez ce code :
+
+```php
+<?php phpinfo(); ?>
+```
+
+## ✅ Vérification finale
+
+Accédez dans votre navigateur à :
+
+- http://server2.learn-it.local/
+
+- http://server2.learn-it.local/info.php
+
+Si les pages s’affichent correctement, **votre pile LEMP est fonctionnelle**.
+
+🛑 **Important :** une fois le test terminé, supprimez 'info.php' pour des raisons de sécurité :
+
+
+```bash 
+sudo rm /var/www/html/info.php
+```
+
+## 🎉 Félicitations !
+
+Vous avez installé et configuré avec succès une pile **LEMP** sur votre serveur 🎊
